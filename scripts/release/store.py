@@ -6,7 +6,6 @@ import hashlib
 import json
 import plistlib
 from pathlib import Path
-import shutil
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -15,7 +14,8 @@ BUNDLE = "local.ethan.StageMark"
 
 def copy_payload(source, destination):
     # Preserve executable permissions, but never inherit downloaded-file xattrs.
-    shutil.copy(source, destination)
+    Path(destination).write_bytes(Path(source).read_bytes())
+    Path(destination).chmod(Path(source).stat().st_mode & 0o777)
 
 
 def check_payload_attributes(app):
