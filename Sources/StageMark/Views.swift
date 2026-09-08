@@ -35,7 +35,7 @@ struct ControlCenter: View {
                     Label("Made for the live demo", systemImage: "sparkle").font(.system(size: 10, weight: .medium)).foregroundStyle(.secondary)
                     Text("Native to your Mac.\nYour screen stays yours.").font(.system(size: 11)).foregroundStyle(.tertiary).lineSpacing(3)
                     HStack {
-                        Text("1.2.0").font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary)
+                        Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Development").font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary)
                         Spacer()
                         Button("Quit") { app.quitApp() }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(.secondary)
                     }.padding(.top, 12)

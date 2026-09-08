@@ -1,0 +1,9 @@
+{
+  "regressions": ["zsh", "scripts/test.zsh"],
+  "build": ["zsh", "scripts/build.zsh"],
+  "archive": "build/StageMark.zip",
+  "bundle": "Workbench StageMark.app",
+  "identifier": "local.ethan.StageMark",
+  "executable": "StageMark",
+  "checks": []
+}

@@ -18,13 +18,13 @@ Workbench is an open-source collection of small native Mac utilities: **[Voice](
 
 First contribution? Fix a confusing instruction, test a workflow on your Mac, improve keyboard access, or take a small Swift change. You do not need to be a Swift expert. [The contributor guide](CONTRIBUTING.md) takes you from choosing an issue to opening your first pull request. Documentation can be edited directly on GitHub without a Mac.
 
-We are early: expect rough edges, locally signed releases, and a small maintainer team. The [open issues](https://github.com/EthDawg/StageMark/issues) are the live backlog; `good first issue` marks bounded starting points and `help wanted` marks broader work. [Discuss larger ideas](https://github.com/EthDawg/local-voice/discussions) before investing heavily. We welcome documentation, accessibility, design, bug reports, and testing as well as code.
+We are early: expect rough edges and a small maintainer team. The [open issues](https://github.com/EthDawg/StageMark/issues) are the live backlog; `good first issue` marks bounded starting points and `help wanted` marks broader work. [Discuss larger ideas](https://github.com/EthDawg/local-voice/discussions) before investing heavily. We welcome documentation, accessibility, design, bug reports, and testing as well as code.
 
 ## Install
 
-For a locally built app, follow [the source setup](CONTRIBUTING.md#build-and-check). Release binaries are ad-hoc signed and **not Apple-notarized**, so macOS may block a downloaded app.
+For a locally built app, follow [the source setup](CONTRIBUTING.md#build-and-check). Official StageMark 1.2.1 early-access downloads are **Developer ID signed and Apple-notarised**. The [Workbench website](https://workbench-mac.vercel.app) links the current signed download and trial guide.
 
-Download the latest `StageMark.zip` from the repository's Releases page, unzip it, and move **Workbench StageMark.app** into **Applications**. Quit StageMark before replacing an existing version. Keep the installed app in Applications and remove the unpacked download copy to avoid duplicate app-search results. Settings and saved boards live separately and survive app updates. For a source installation or migration from StageMark, run `zsh scripts/install.zsh`; it builds, verifies, installs the new name, and archives the previous installed app for rollback.
+Download `StageMark.zip` from [the signed 1.2.1 release](https://github.com/EthDawg/StageMark/releases/tag/v1.2.1), unzip it, and move **Workbench StageMark.app** into **Applications**. Quit StageMark before replacing an existing version. Keep the installed app in Applications and remove the unpacked download copy to avoid duplicate app-search results. Settings and saved boards live separately and survive app updates. For a source installation or migration from StageMark, run `zsh scripts/install.zsh`; it builds, verifies, installs the new name, and archives the previous installed app for rollback.
 
 ## Native quick controls
 
@@ -99,7 +99,7 @@ Quit StageMark before running the tests: the integration suite checks exclusive 
 
 The build creates and verifies an ad-hoc signed app and packages it as `build/StageMark.zip`. Its temporary app bundle is removed automatically so repeated builds do not add another app to macOS search. The icon is generated from original native vector drawing code. On an agent with a restricted filesystem sandbox, macOS icon compilation and the native graphics tests may need the standard execution approval; ordinary Terminal builds do not have that restriction.
 
-This is an early community project with locally signed builds. Developer ID signing and Apple notarization for general distribution are not included. Remove the app from Applications to uninstall; your settings and saved boards remain available until you choose to remove them.
+This is an early community project. Official 1.2.1 downloads include Developer ID signing and Apple notarisation; source builds remain ad-hoc signed. Independent new-Mac and older-macOS testing is still needed. The [release guide](scripts/release/README.md) explains the repeatable workflow and separate Mac App Store requirements. Remove the app from Applications to uninstall; your settings and saved boards remain available until you choose to remove them.
 
 ## Verification limits
 
