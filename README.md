@@ -12,6 +12,20 @@ A native Mac presentation companion for software demos, teaching, and live prese
 
 Open **Workbench StageMark** from Applications. It lives in the menu bar. Click its pencil icon or press **Control–Option–S** for the native quick-controls panel. Right-click the icon for an action menu. There is no subscription, account, server, or network dependency.
 
+## Preview 1.3: reusable demo scenes
+
+Press **Control–Option–P**, or choose **Demo scenes** in quick controls. Add a customer backdrop, drag the phone into position and adjust its size. Drag the image to crop it or turn the phone off for a plain backdrop. Each change is saved automatically; give the scene a customer or product name to find it again next month. Imported pictures are copied into StageMark, so removing the original download does not break a scene.
+
+**Use as desktop** applies the scene to the display containing the editor. **Restore desktop** brings back its previous picture and scaling options, including after restarting StageMark. Later manual desktop changes are preserved. This operates on the current desktop of the selected display; it does not promise to configure every Space or restore a dynamic wallpaper schedule. **Export image** produces a PNG at the display's backing resolution. The phone frame is original vector artwork; QuickTime owns live iPhone video, and positioning its movie window remains manual.
+
+Demo scenes use the existing native shell and Apple frameworks. There is no image service, asset upload or third-party editor dependency. In the future App Store build, scene import/export is supported by the user-selected file entitlement; desktop switching is reserved for the direct edition pending sandbox acceptance. The already-submitted 1.2.1 Store candidate is unchanged.
+
+## Keep production and Preview
+
+Install **Workbench StageMark Preview.app** alongside the current app. Preview has a distinct identity, settings, saved boards and scenes. The first launch copies existing settings and boards once; later updates keep Preview's own changes. Run one edition of each tool at a time because they intentionally retain the same familiar shortcuts. Preview shows a notice if the production edition is running.
+
+From source, quit Preview and run `zsh scripts/install.zsh`. This updates the same Preview app using an available Developer ID certificate and keeps a rollback ZIP. It does not replace production or remove any saved data. `zsh scripts/build.zsh --preview` just builds the package. Preview StageMark contains Apple Silicon and Intel slices; Intel compilation is verified, but a physical Intel Mac has not been tested. See [release instructions](scripts/release/README.md) for signing and explicit production updates from notarised archives.
+
 ## Help shape Workbench
 
 Workbench is an open-source collection of small native Mac utilities: **[Voice](https://github.com/EthDawg/local-voice)** for dictation and reading, and **[StageMark](https://github.com/EthDawg/StageMark)** for presenting. Each app works independently. Our focus is useful everyday tools, local processing, clear controls, and recoverable user data.
@@ -87,7 +101,7 @@ The app makes no network requests and asks for no screen-recording or accessibil
 
 ## Build and checks
 
-Requires macOS 14 or later, Apple Silicon, and Apple's Command Line Tools. No third-party packages or full Xcode installation are needed.
+Requires macOS 14 or later and Apple's Command Line Tools. No third-party packages or full Xcode installation are needed. The native build targets the current Mac; `./scripts/build.zsh --universal` packages both arm64 and x86_64. Preview builds default to universal.
 
 ```sh
 cd StageMark

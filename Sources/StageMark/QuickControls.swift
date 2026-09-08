@@ -55,6 +55,13 @@ struct QuickControlsView: View {
                 }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 2)
             }.id(app.quickTab)
             Divider()
+            Button { app.showDemoScenes() } label: {
+                HStack {
+                    Label("Demo scenes", systemImage: "iphone.and.landscape")
+                    Spacer()
+                    Text(settings.value.shortcut(for: .scenes).label).foregroundStyle(.secondary)
+                }
+            }.buttonStyle(.plain).help("Saved customer backdrops and phone layouts")
             WorkbenchSwitcher { app.hideQuickControls(); app.escape() }.frame(maxWidth: .infinity, alignment: .leading)
             HStack {
                 Button("All Settings…") { app.showControls(tab: "Drawing") }.buttonStyle(.link)

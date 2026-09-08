@@ -3,6 +3,7 @@ set -euo pipefail
 STAGEMARK_ROOT="${0:A:h:h}"
 cd "$STAGEMARK_ROOT"
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/release/test_release.py
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/release/test_preview.py
 mkdir -p .build/module-cache .build/cache
 export CLANG_MODULE_CACHE_PATH="$STAGEMARK_ROOT/.build/module-cache"
 export SWIFTPM_MODULECACHE_OVERRIDE="$STAGEMARK_ROOT/.build/module-cache"

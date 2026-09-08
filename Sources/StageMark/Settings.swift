@@ -11,7 +11,7 @@ enum PaletteMode: String, Codable, CaseIterable { case autoHide = "Auto-hide", s
 
 enum Action: String, CaseIterable, Codable, Identifiable {
     case pen, highlighter, arrow, line, rectangle, ellipse, text, eraser
-    case clear, undo, redo, whiteboard, blackboard, pointer, fade, timer, controls
+    case clear, undo, redo, whiteboard, blackboard, pointer, fade, timer, controls, scenes
     case color1, color2, color3, color4, color5, color6
     var id: String { rawValue }
     var tool: DrawingTool? { DrawingTool(rawValue: rawValue) }
@@ -25,6 +25,7 @@ enum Action: String, CaseIterable, Codable, Identifiable {
         case .fade: return "Auto-fade"
         case .timer: return "Break timer"
         case .controls: return "Open StageMark"
+        case .scenes: return "Demo scenes"
         case .color1, .color2, .color3, .color4, .color5, .color6: return "Colour \(rawValue.last!)"
         default: return rawValue.capitalized
         }
@@ -48,6 +49,7 @@ enum Action: String, CaseIterable, Codable, Identifiable {
         case .fade: key = kVK_ANSI_F
         case .timer: key = kVK_ANSI_K
         case .controls: key = kVK_ANSI_S
+        case .scenes: key = kVK_ANSI_P
         case .color1: key = kVK_ANSI_1
         case .color2: key = kVK_ANSI_2
         case .color3: key = kVK_ANSI_3

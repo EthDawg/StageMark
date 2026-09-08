@@ -42,7 +42,8 @@ def main():
     info = plistlib.loads((ROOT / "Resources/Info.plist").read_bytes())
     if args.build <= int(info["CFBundleVersion"]):
         parser.error("Use a store build number above the direct-release build")
-    entitlements = {"com.apple.security.app-sandbox": True}
+    entitlements = {"com.apple.security.app-sandbox": True,
+                    "com.apple.security.files.user-selected.read-write": True}
     if not args.preview:
         if not all([args.profile, args.team_id, args.app_identity, args.installer_identity]):
             parser.error("Distribution requires profile, team-id, app-identity and installer-identity")

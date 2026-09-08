@@ -14,7 +14,15 @@ struct TestRunner {
         NSApp.finishLaunching()
         let suite = CoreTests()
         let integration = IntegrationTests()
+        let scenes = SceneTests()
         var tests: [(String, () throws -> Void)] = [
+            ("desktop recovery across interrupted scene switch", scenes.testDesktopRecoverySurvivesInterruptedSwitch),
+            ("scene persistence and bounds", scenes.testSceneRoundTripAndBounds),
+            ("scene path and number validation", scenes.testUnsafeImagePathsAndNumbersRejected),
+            ("scene corrupt and future archive safety", scenes.testCorruptAndFutureArchivesPreserved),
+            ("scene duplicate ID validation", scenes.testDuplicateIDsRejected),
+            ("phone geometry across display shapes", scenes.testPhoneStaysWithinWideAndTallDisplays),
+            ("scene rendering and durable image import", scenes.testRenderAndImportedImageSurviveSourceRemoval),
             ("line hit testing", suite.testLineHitTestingUsesSegmentsNotBoundingBox),
             ("rectangle edge hit testing", suite.testRectangleOnlyErasesAtBorder),
             ("ellipse edge hit testing", suite.testEllipseOnlyErasesAtBorder),

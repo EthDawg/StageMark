@@ -4,7 +4,7 @@ set -euo pipefail
 fail() { printf 'Setup needed: %s
 ' "$1" >&2; exit 1; }
 [ "$(uname -s)" = Darwin ] || fail "Build and run on macOS. Documentation contributions work on any OS."
-[ "$(uname -m)" = arm64 ] || fail "Use an Apple Silicon Mac and a native Terminal (not Rosetta)."
+case "$(uname -m)" in arm64|x86_64) ;; *) fail "Use an Apple Silicon or Intel Mac." ;; esac
 xcode-select -p >/dev/null 2>&1 || fail "Run xcode-select --install, then retry."
 command -v swift >/dev/null 2>&1 || fail "Install Apple Command Line Tools with xcode-select --install."
 OS_MAJOR="$(sw_vers -productVersion | cut -d. -f1)"

@@ -3,6 +3,7 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
     var coordinator: AppCoordinator?
     func applicationDidFinishLaunching(_ notification: Notification) {
+        Workbench.preparePreviewData(component: "StageMark", files: ["boards.json"])
         _ = WorkbenchSettings.shared
         let menu = NSMenu()
         let appItem = NSMenuItem(); menu.addItem(appItem)

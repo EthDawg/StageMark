@@ -1,6 +1,16 @@
 # StageMark verification
 
-Build target: Apple Silicon, macOS 14+. Verification machine: macOS 26.5.1, Apple Swift 6.3.3, one attached display. The project uses only Apple frameworks.
+Build targets: Apple Silicon and Intel, macOS 14+. Verification machine: Apple Silicon, macOS 26.5.1, Apple Swift 6.3.3, one attached display. The project uses only Apple frameworks. Intel compilation is separate from physical Intel acceptance.
+
+## Preview 1.3 — 9 September 2026
+
+Native regression suite: **33 tests, 223 assertions, zero failures**. Four release-script checks and seven Preview-installer checks also pass. The first native run was correctly rejected because production still held its shortcuts; after using the explicit Quit action, the full suite passed. The sandbox's AppKit initialization failure was not counted as a pass.
+
+New scene coverage includes archive round trips and bounds; path traversal, nonfinite values and duplicate identifiers; preservation of corrupt/future archives; image copies surviving removal of their source; safe duplication; landscape/portrait/ultrawide phone geometry; actual PNG pixels/dimensions; and a recovery journal that recognizes both sides of an interrupted desktop switch. An independent quadrant-image probe verified image orientation. Retina output uses backing dimensions, and editor screen changes update the preview ratio. The image cache is bounded.
+
+Desktop recovery retains unknown or disconnected displays for retry, preserves later manual wallpaper changes, and records recovery before changing the desktop. Physical multi-display/Space behaviour and dynamic wallpaper restoration remain unverified. App Store desktop switching is disabled; adding user-selected file access does not establish Store acceptance of the new features.
+
+The installed Preview is Developer ID signed, version 1.3.0 build 20260908150933, with verified arm64 and x86_64 slices. It is a local test build, not notarised or published. Production bundle, data and preference fingerprints were unchanged across its installation. The shared shell, Preview installer and installer tests match Voice byte for byte. Visual acceptance of the installed Preview remains pending: the desktop tool reported a locked Mac and could not open the app. Required interactive checks: image import, name/search, drag/size, high-resolution export, desktop apply/restore, restart, and same-channel suite switching. A successful compile is not visual acceptance.
 
 ## Automated checks
 

@@ -7,6 +7,7 @@ import ServiceManagement
 final class AppCoordinator: NSObject, ObservableObject, NSWindowDelegate, NSPopoverDelegate {
     let settings: SettingsStore
     let hotkeys = HotkeyManager()
+    lazy var demoScenes = DemoScenes()
     @Published var tool = DrawingTool.pen
     @Published var isDrawing = false
     @Published var pointerEnabled = false
@@ -62,7 +63,7 @@ final class AppCoordinator: NSObject, ObservableObject, NSWindowDelegate, NSPopo
         self.settings = settings
         let testRoot = ProcessInfo.processInfo.environment["STAGEMARK_DATA_DIR"]
         self.archiveURL = archiveURL ?? testRoot.map { URL(fileURLWithPath: $0).appendingPathComponent("boards.json") }
-            ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("StageMark/boards.json")
+            ?? Workbench.supportDirectory(component: "StageMark").appendingPathComponent("boards.json")
         super.init()
     }
     func start() {
@@ -89,6 +90,7 @@ final class AppCoordinator: NSObject, ObservableObject, NSWindowDelegate, NSPopo
         if !settings.value.onboardingComplete { showQuickControls() }
     }
     func shutdown() {
+        demoScenes.shutdown()
         hideQuickControls()
         stopDrawing(); saveWork?.cancel(); saveBoards()
         hotkeys.unregister(); effectTimer?.invalidate(); countdownTimer?.invalidate()
@@ -183,6 +185,7 @@ final class AppCoordinator: NSObject, ObservableObject, NSWindowDelegate, NSPopo
         case .fade: settings.value.autoFade.toggle()
         case .timer: toggleTimer()
         case .controls: toggleQuickControls()
+        case .scenes: showDemoScenes()
         case .color1, .color2, .color3, .color4, .color5, .color6:
             if let number = action.rawValue.last.flatMap({ Int(String($0)) }) { settings.value.color = InkColor.presets[number - 1] }
         default: break
@@ -354,7 +357,7 @@ final class AppCoordinator: NSObject, ObservableObject, NSWindowDelegate, NSPopo
     private func showStatusMenu() {
         hideQuickControls()
         let menu = NSMenu()
-        for action in [Action.pen, .arrow, .highlighter, .clear, .pointer, .whiteboard, .blackboard, .timer, .controls] {
+        for action in [Action.pen, .arrow, .highlighter, .clear, .pointer, .whiteboard, .blackboard, .timer, .scenes, .controls] {
             let item = NSMenuItem(title: action.title, action: #selector(menuAction(_:)), keyEquivalent: "")
             item.representedObject = action.rawValue; item.target = self; menu.addItem(item)
         }
@@ -369,6 +372,10 @@ final class AppCoordinator: NSObject, ObservableObject, NSWindowDelegate, NSPopo
     }
     @objc func quitApp() { NSApp.terminate(nil) }
     @objc private func openAllSettings() { showControls(tab: "Drawing") }
+    func showDemoScenes() {
+        hideQuickControls(); escape(); mainWindow?.orderOut(nil)
+        demoScenes.show()
+    }
     func showControls(tab: String? = nil) {
         if let frontmost = NSWorkspace.shared.frontmostApplication,
            frontmost.processIdentifier != ProcessInfo.processInfo.processIdentifier {
