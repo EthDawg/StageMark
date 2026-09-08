@@ -1,5 +1,7 @@
 """Regression checks for release rejection and nested signing order."""
 import importlib.util
+import subprocess
+import sys
 from pathlib import Path
 import plistlib
 import tempfile
@@ -10,9 +12,32 @@ from types import SimpleNamespace
 spec = importlib.util.spec_from_file_location("workbench_release", Path(__file__).with_name("release.py"))
 release = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(release)
+store_spec = importlib.util.spec_from_file_location("workbench_store", Path(__file__).with_name("store.py"))
+store = importlib.util.module_from_spec(store_spec)
+store_spec.loader.exec_module(store)
 
 
 class ReleaseTests(unittest.TestCase):
+    @unittest.skipUnless(sys.platform == "darwin", "macOS downloaded-file attributes")
+    def test_downloaded_profile_attributes_do_not_enter_store_payload(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "downloaded.provisionprofile"
+            source.write_bytes(b"profile content")
+            source.chmod(0o755)
+            subprocess.run(["xattr", "-w", "com.apple.quarantine", "0081;test;Chrome;", str(source)], check=True)
+            app = root / "Example.app"
+            app.mkdir()
+            target = app / "embedded.provisionprofile"
+            store.copy_payload(source, target)
+            self.assertEqual(target.read_bytes(), source.read_bytes())
+            self.assertEqual(target.stat().st_mode & 0o777, 0o755)
+            self.assertIn("com.apple.quarantine", subprocess.check_output(["xattr", str(source)]).decode())
+            store.check_payload_attributes(app)
+            subprocess.run(["xattr", "-w", "com.apple.quarantine", "0081;test;Chrome;", str(target)], check=True)
+            with self.assertRaises(RuntimeError):
+                store.check_payload_attributes(app)
+
     def test_only_explicit_acceptance_passes(self):
         for result in [{}, {"status": "Invalid"}, {"status": "In Progress"}, {"status": "Rejected"}]:
             with self.subTest(result=result), self.assertRaises(RuntimeError):

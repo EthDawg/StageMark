@@ -14,7 +14,7 @@ STAGEMARK_APP="$STAGEMARK_PACKAGE_DIR/Workbench StageMark.app"
 mkdir -p "$STAGEMARK_APP/Contents/MacOS" "$STAGEMARK_APP/Contents/Resources"
 cp .build/release/StageMark "$STAGEMARK_APP/Contents/MacOS/StageMark"
 cp Resources/Info.plist "$STAGEMARK_APP/Contents/Info.plist"
-if [[ ! -f Resources/AppIcon.icns || scripts/make-icon.swift -nt Resources/AppIcon.icns ]]; then
+if [[ ! -f Resources/AppIcon.icns ]]; then
   swift scripts/make-icon.swift
   iconutil -c icns build/AppIcon.iconset -o Resources/AppIcon.icns
 fi
