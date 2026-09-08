@@ -3,10 +3,11 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
     var coordinator: AppCoordinator?
     func applicationDidFinishLaunching(_ notification: Notification) {
+        _ = WorkbenchSettings.shared
         let menu = NSMenu()
         let appItem = NSMenuItem(); menu.addItem(appItem)
         let appMenu = NSMenu(); appItem.submenu = appMenu
-        appMenu.addItem(withTitle: "Quit StageMark", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: "Quit Workbench StageMark", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         let editItem = NSMenuItem(); menu.addItem(editItem)
         let edit = NSMenu(title: "Edit"); editItem.submenu = edit
         for (title, selector, key) in [("Cut", "cut:", "x"), ("Copy", "copy:", "c"), ("Paste", "paste:", "v"), ("Select All", "selectAll:", "a")] {

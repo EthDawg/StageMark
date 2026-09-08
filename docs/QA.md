@@ -48,3 +48,11 @@ The suite does not synthesize input into other apps. It invokes the actual appli
 External-display hot-plug and full-screen Spaces transitions; live pressure data from Sidecar or a tablet; Stream Deck-generated keys; a recipient seeing annotations in Zoom/Teams/Meet; launch-at-login across a reboot. The relevant implementations are present, but these environments were not exercised. Apple Pencil double-tap is not implemented.
 
 No claim is made that a fresh local implementation has the same long-term field history as DemoPro. The focus is a tested personal Mac app for the main solution-consultant presentation workflow.
+
+## Workbench StageMark 1.2.0 — 8 September 2026
+
+The final native regression suite passes: 26 tests, 172 assertions, zero failures. It covers rendering, input, persistence, windows, and exclusive shortcut registration. The installed signed executable matches `build/StageMark.zip` exactly. The Workbench shared shell matches Voice byte-for-byte.
+
+Visually checked the new native Workbench header, menu switcher, retained drawing controls, and shared dark appearance. The shell explicitly resolves System/Light/Dark in SwiftUI to avoid stale popover appearance. StageMark-to-Voice navigation was exercised. Existing bundle identifier, preferences domain, and board path are retained; the installed saved-board file still contains its display data. No drawing/persistence implementation changed.
+
+Spotlight’s index returns the canonical `/Applications/Workbench StageMark.app` and Workbench Voice installation with their new names, with no old app-bundle duplicates. Both advertise the Utilities category. The prior installed StageMark version is retained as a ZIP under build for rollback.

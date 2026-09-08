@@ -16,19 +16,13 @@ struct QuickControlsView: View {
     var body: some View {
         VStack(spacing: 12) {
             HStack(spacing: 9) {
-                Image(systemName: "pencil.tip.crop.circle.fill")
-                    .font(.system(size: 23)).foregroundStyle(Color.accentColor)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("StageMark").font(.system(size: 13, weight: .semibold))
-                    Text(app.isDrawing ? "\(app.tool.title) active" : "Ready to present")
-                        .font(.system(size: 10)).foregroundStyle(.secondary)
-                }
+                WorkbenchHeader(title: "StageMark", subtitle: app.isDrawing ? "\(app.tool.title) active" : "Ready to present", symbol: "pencil.tip.crop.circle.fill")
                 Spacer()
                 Menu {
                     Button("All Settings…") { app.showControls(tab: "Drawing") }
                     Button("Keyboard Shortcuts…") { app.showControls(tab: "Shortcuts") }
                     Divider()
-                    Button("Quit StageMark") { app.quitApp() }
+                    Button("Quit Workbench StageMark") { app.quitApp() }
                 } label: { Image(systemName: "ellipsis.circle").font(.system(size: 18)) }
                     .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
                     .accessibilityLabel("More options")
@@ -61,6 +55,7 @@ struct QuickControlsView: View {
                 }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 2)
             }.id(app.quickTab)
             Divider()
+            WorkbenchSwitcher { app.hideQuickControls(); app.escape() }.frame(maxWidth: .infinity, alignment: .leading)
             HStack {
                 Button("All Settings…") { app.showControls(tab: "Drawing") }.buttonStyle(.link)
                 Spacer()
@@ -75,7 +70,7 @@ struct QuickControlsView: View {
         }
         .padding(14).frame(width: Self.size.width, height: Self.size.height)
         .font(.system(size: 12)).controlSize(.small)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(Workbench.background).tint(Workbench.accent).workbenchTheme()
         .onExitCommand { app.hideQuickControls() }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("StageMark quick controls")
@@ -142,7 +137,7 @@ struct QuickControlsView: View {
                         Button { app.startDrawing(tool, latched: true) } label: {
                             HStack(spacing: 9) {
                                 Image(systemName: tool.symbol).frame(width: 19)
-                                    .foregroundStyle(app.tool == tool ? Color.accentColor : .secondary)
+                                    .foregroundStyle(app.tool == tool ? Workbench.accent : .secondary)
                                 Text(tool == .pen ? "Freehand" : tool.title)
                                 Spacer(minLength: 0)
                             }.frame(maxWidth: .infinity, minHeight: 25, alignment: .leading).contentShape(Rectangle())
@@ -240,6 +235,7 @@ struct QuickControlsView: View {
 
     private var general: some View {
         VStack(alignment: .leading, spacing: 16) {
+            WorkbenchAppearancePicker()
             Toggle("Launch at login", isOn: Binding(get: { app.launchAtLogin }, set: { app.setLaunchAtLogin($0) }))
             Text("StageMark stays in the menu bar when you close its controls. Hold Command and drag its icon to reposition it.")
                 .font(.system(size: 11)).foregroundStyle(.secondary)
@@ -277,7 +273,7 @@ struct QuickControlsView: View {
         Button { app.beginRecording(action) } label: {
             Text(app.recordingAction == action ? "Press keys…" : settings.value.shortcut(for: action).label)
                 .font(.system(size: 10, weight: .medium, design: .monospaced))
-                .foregroundStyle(app.recordingAction == action ? Color.accentColor : .secondary)
+                .foregroundStyle(app.recordingAction == action ? Workbench.accent : .secondary)
                 .frame(minWidth: 57).padding(.horizontal, 7).padding(.vertical, 4)
                 .background(.quaternary, in: RoundedRectangle(cornerRadius: 5))
         }.buttonStyle(.plain).accessibilityLabel("Shortcut for \(action.title)")

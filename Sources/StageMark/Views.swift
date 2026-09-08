@@ -1,9 +1,9 @@
 import SwiftUI
 import AppKit
 
-private let inkBackground = Color(red: 0.055, green: 0.067, blue: 0.094)
-private let inkSurface = Color(red: 0.088, green: 0.105, blue: 0.142)
-private let inkAccent = Color(red: 0.43, green: 0.89, blue: 0.73)
+private let inkBackground = Workbench.background
+private let inkSurface = Workbench.surface
+private let inkAccent = Workbench.accent
 
 struct ControlCenter: View {
     @ObservedObject var app: AppCoordinator
@@ -12,10 +12,7 @@ struct ControlCenter: View {
     var body: some View {
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 28) {
-                HStack(spacing: 10) {
-                    Image(systemName: "pencil.tip.crop.circle.fill").font(.system(size: 28)).foregroundStyle(inkAccent)
-                    Text("StageMark").font(.system(size: 19, weight: .semibold))
-                }.padding(.top, 12)
+                WorkbenchHeader(title: "StageMark", subtitle: "Make the point.", symbol: "pencil.tip.crop.circle.fill").padding(.top, 12)
                 VStack(spacing: 5) {
                     ForEach(tabs, id: \.0) { title, symbol in
                         Button { app.finishRecording(); app.selectedTab = title } label: {
@@ -30,19 +27,21 @@ struct ControlCenter: View {
                     }
                 }
                 Spacer()
+                WorkbenchSwitcher { app.hideQuickControls(); app.escape() }
+                WorkbenchAppearancePicker().font(.caption)
                 VStack(alignment: .leading, spacing: 8) {
                     Toggle("Launch at login", isOn: Binding(get: { app.launchAtLogin }, set: { app.setLaunchAtLogin($0) }))
                         .toggleStyle(.checkbox).font(.system(size: 11)).padding(.bottom, 14)
                     Label("Made for the live demo", systemImage: "sparkle").font(.system(size: 10, weight: .medium)).foregroundStyle(.secondary)
                     Text("Native to your Mac.\nYour screen stays yours.").font(.system(size: 11)).foregroundStyle(.tertiary).lineSpacing(3)
                     HStack {
-                        Text("1.1.0").font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary)
+                        Text("1.2.0").font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary)
                         Spacer()
                         Button("Quit") { app.quitApp() }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(.secondary)
                     }.padding(.top, 12)
                 }
-            }.padding(20).frame(width: 190).background(Color.black.opacity(0.14))
-            Rectangle().fill(Color.white.opacity(0.07)).frame(width: 1)
+            }.padding(20).frame(width: 190).background(Workbench.surface.opacity(0.65))
+            Rectangle().fill(Workbench.border).frame(width: 1)
             VStack(spacing: 0) {
                 HStack {
                     Text(app.selectedTab).font(.system(size: 14, weight: .semibold))
@@ -79,7 +78,7 @@ struct ControlCenter: View {
                     }.padding(28).frame(maxWidth: .infinity, alignment: .leading)
                 }.id(app.selectedTab)
             }
-        }.background(inkBackground).preferredColorScheme(.dark).tint(inkAccent)
+        }.background(inkBackground).tint(inkAccent).workbenchTheme()
     }
     private var present: some View {
         VStack(alignment: .leading, spacing: 17) {
@@ -121,7 +120,7 @@ struct ControlCenter: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack { Image(systemName: tool.symbol).font(.system(size: 20)); Spacer(); Image(systemName: "arrow.up.right").font(.system(size: 10)).opacity(0.6) }
                 Text(title).font(.system(size: 12, weight: .semibold))
-            }.foregroundStyle(tool == .pen ? inkBackground : Color.white)
+            }.foregroundStyle(tool == .pen ? inkBackground : Color.primary)
                 .padding(14).frame(maxWidth: .infinity, alignment: .leading)
                 .background(tool == .pen ? inkAccent : inkSurface, in: RoundedRectangle(cornerRadius: 12))
         }.buttonStyle(.plain)
@@ -388,7 +387,7 @@ struct DrawingPalette: View {
         }.buttonStyle(.plain).padding(.horizontal, 13).padding(.vertical, 12)
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 15))
             .overlay(RoundedRectangle(cornerRadius: 15).stroke(.white.opacity(0.12)))
-            .padding(4).preferredColorScheme(.dark)
+            .padding(4)
     }
 }
 
@@ -420,6 +419,6 @@ struct BreakTimerView: View {
             }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color(nsColor: settings.value.timerBackground.nsColor))
                 .onHover { controlsVisible = $0 }
-        }.preferredColorScheme(.dark)
+        }
     }
 }

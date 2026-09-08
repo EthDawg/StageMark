@@ -296,16 +296,16 @@ final class AppCoordinator: NSObject, ObservableObject, NSWindowDelegate, NSPopo
         statusItem.isVisible = true
         statusItem.button?.target = self; statusItem.button?.action = #selector(statusClicked)
         statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
-        statusItem.button?.setAccessibilityLabel("StageMark")
+        statusItem.button?.setAccessibilityLabel("Workbench StageMark")
         updateStatus()
     }
     private func updateStatus() {
-        let image = NSImage(systemSymbolName: isDrawing ? "pencil.tip.crop.circle.fill" : "pencil.tip.crop.circle", accessibilityDescription: "StageMark")
+        let image = NSImage(systemSymbolName: isDrawing ? "pencil.tip.crop.circle.fill" : "pencil.tip.crop.circle", accessibilityDescription: "Workbench StageMark")
         image?.isTemplate = true
         statusItem?.button?.image = image
         statusItem?.button?.imagePosition = .imageLeading
         statusItem?.button?.title = timerRunning || timerFinished ? " " + timerText : ""
-        statusItem?.button?.toolTip = "StageMark · \(isDrawing ? tool.title : "Ready") · \(settings.value.shortcut(for: .controls).label)"
+        statusItem?.button?.toolTip = "Workbench StageMark · \(isDrawing ? tool.title : "Ready") · \(settings.value.shortcut(for: .controls).label)"
     }
     @objc private func statusClicked() {
         if NSApp.currentEvent?.type == .rightMouseUp { showStatusMenu(); return }
@@ -328,14 +328,14 @@ final class AppCoordinator: NSObject, ObservableObject, NSWindowDelegate, NSPopo
             popover.animates = false
             popover.delegate = self
             let controller = NSHostingController(rootView: QuickControlsView(app: self, settings: settings))
-            controller.title = "StageMark quick controls"
+            controller.title = "Workbench StageMark quick controls"
             popover.contentViewController = controller
             popover.contentSize = QuickControlsView.size
             quickPopover = popover
         }
         mainWindow?.orderOut(nil)
         statusItem.isVisible = true
-        quickPopover?.appearance = NSApp.effectiveAppearance
+        quickPopover?.appearance = nil
         NSApp.activate(ignoringOtherApps: true)
         quickPopover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         quickControlsVisible = quickPopover?.isShown == true
@@ -361,7 +361,7 @@ final class AppCoordinator: NSObject, ObservableObject, NSWindowDelegate, NSPopo
         menu.addItem(.separator())
         let settingsItem = NSMenuItem(title: "All Settings…", action: #selector(openAllSettings), keyEquivalent: ",")
         settingsItem.target = self; menu.addItem(settingsItem)
-        let quit = NSMenuItem(title: "Quit StageMark", action: #selector(quitApp), keyEquivalent: "q"); quit.target = self; menu.addItem(quit)
+        let quit = NSMenuItem(title: "Quit Workbench StageMark", action: #selector(quitApp), keyEquivalent: "q"); quit.target = self; menu.addItem(quit)
         statusItem.menu = menu; statusItem.button?.performClick(nil); statusItem.menu = nil
     }
     @objc private func menuAction(_ sender: NSMenuItem) {
@@ -378,7 +378,7 @@ final class AppCoordinator: NSObject, ObservableObject, NSWindowDelegate, NSPopo
         if let tab { selectedTab = tab }
         if mainWindow == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 650), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
-            window.title = "StageMark"; window.titlebarAppearsTransparent = true
+            window.title = "Workbench StageMark"; window.titlebarAppearsTransparent = true
             window.minSize = NSSize(width: 850, height: 620); window.isReleasedWhenClosed = false
             window.contentView = NSHostingView(rootView: ControlCenter(app: self, settings: settings))
             window.center(); window.delegate = self; mainWindow = window
@@ -449,7 +449,7 @@ final class AppCoordinator: NSObject, ObservableObject, NSWindowDelegate, NSPopo
     private func showTimer() {
         if timerWindow == nil {
             let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 570, height: 330), styleMask: [.titled, .closable, .resizable, .miniaturizable, .nonactivatingPanel], backing: .buffered, defer: false)
-            panel.title = "StageMark · Break timer"; panel.titlebarAppearsTransparent = true
+            panel.title = "Workbench StageMark · Break timer"; panel.titlebarAppearsTransparent = true
             panel.level = .floating; panel.hidesOnDeactivate = false
             panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
             panel.minSize = NSSize(width: 360, height: 240); panel.isReleasedWhenClosed = false

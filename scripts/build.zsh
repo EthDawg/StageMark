@@ -10,7 +10,7 @@ swift build -c release --cache-path "$STAGEMARK_ROOT/.build/cache" --disable-san
 # lasting .app should be the installed copy in /Applications.
 STAGEMARK_PACKAGE_DIR="$(mktemp -d "$STAGEMARK_ROOT/.build/package.XXXXXX")"
 trap 'rm -rf -- "$STAGEMARK_PACKAGE_DIR"' EXIT
-STAGEMARK_APP="$STAGEMARK_PACKAGE_DIR/StageMark.app"
+STAGEMARK_APP="$STAGEMARK_PACKAGE_DIR/Workbench StageMark.app"
 mkdir -p "$STAGEMARK_APP/Contents/MacOS" "$STAGEMARK_APP/Contents/Resources"
 cp .build/release/StageMark "$STAGEMARK_APP/Contents/MacOS/StageMark"
 cp Resources/Info.plist "$STAGEMARK_APP/Contents/Info.plist"

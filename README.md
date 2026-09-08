@@ -1,16 +1,16 @@
-# StageMark
+# Workbench StageMark
 
 A native Mac presentation companion built for Ethan's software demos. Draw over a live application, guide the audience with a cursor highlight, open a saved board, and put a break timer on screen.
 
-Open **StageMark** from Applications. It lives in the menu bar. Click its pencil icon or press **Control–Option–S** for the native quick-controls panel. Right-click the icon for an action menu. There is no subscription, account, server, or network dependency.
+Open **Workbench StageMark** from Applications. It lives in the menu bar. Click its pencil icon or press **Control–Option–S** for the native quick-controls panel. Right-click the icon for an action menu. There is no subscription, account, server, or network dependency.
 
 ## Install
 
-Download `StageMark.zip` from the repository's Releases page, unzip it, and move **StageMark.app** into **Applications**. Quit StageMark before replacing an existing version. Keep the installed app in Applications and remove the unpacked download copy to avoid duplicate app-search results. Settings and saved boards live separately and survive app updates.
+Download the latest `StageMark.zip` from the repository's Releases page, unzip it, and move **Workbench StageMark.app** into **Applications**. Quit StageMark before replacing an existing version. Keep the installed app in Applications and remove the unpacked download copy to avoid duplicate app-search results. Settings and saved boards live separately and survive app updates. For a source installation or migration from StageMark, run `zsh scripts/install.zsh`; it builds, verifies, installs the new name, and archives the previous installed app for rollback.
 
 ## Native quick controls
 
-Version 1.1.1 puts everyday adjustments in a compact menu-bar popover that follows your Mac's appearance:
+Version 1.2 adds the Workbench identity, a shared appearance picker, and an app switcher. Everyday adjustments live in a compact menu-bar popover that follows the shared System, Light, or Dark appearance:
 
 - **Draw:** tools, colours, line width, text size, activation mode, auto-fade, editable shortcuts and boards.
 - **Cursor:** highlight style, size, opacity, colour and visibility.
@@ -20,6 +20,12 @@ Version 1.1.1 puts everyday adjustments in a compact menu-bar popover that follo
 The menu-bar icon stays accessible above the drawing canvas. Opening quick controls preserves your current board and ink. Choose a tool to continue drawing; **Return to demo** exits the canvas. Closing the popover leaves StageMark running in the menu bar. **All Settings…** opens the larger configuration window. Hold Command and drag the menu-bar icon to reposition it.
 
 Undo, Redo, Clear, Whiteboard and Blackboard each show an editable shortcut directly beneath their button. Click the shortcut to change it. Drawing accepts the first click after activation, including when the canvas does not yet have focus.
+
+## Workbench
+
+Search **Workbench** in Spotlight to find StageMark and [Workbench Voice](https://github.com/EthDawg/local-voice). Both declare the Utilities app category and share the same native header, slate/mint icons, menu switcher, and System/Light/Dark preference. The switcher ends an active drawing interaction before opening Voice while retaining saved boards. Voice handles local dictation and reading.
+
+The canonical suite design contract is [Workbench](https://github.com/EthDawg/local-voice/blob/main/docs/workbench.md). `Sources/StageMark/Workbench.swift` is identical to Voice’s shared shell; update both when changing that contract.
 
 ## Start with two shortcuts
 
@@ -54,7 +60,7 @@ Hold **Shift** while drawing shapes for squares, circles and lines at 45-degree 
 
 ## Files and privacy
 
-- Installed app: `/Applications/StageMark.app`
+- Installed app: `/Applications/Workbench StageMark.app`
 - Project and source: `/Users/ethanharley/Documents/StageMark`
 - Saved boards: `~/Library/Application Support/StageMark/boards.json`
 - Settings: macOS preferences domain `local.ethan.StageMark`
