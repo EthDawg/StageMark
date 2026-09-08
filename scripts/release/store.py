@@ -4,7 +4,6 @@ import argparse
 import datetime
 import hashlib
 import json
-import os
 import plistlib
 from pathlib import Path
 import shutil
@@ -21,7 +20,7 @@ def copy_payload(source, destination):
 
 def check_payload_attributes(app):
     for path in [app, *app.rglob("*")]:
-        if "com.apple.quarantine" in os.listxattr(path):
+        if "com.apple.quarantine" in run("xattr", str(path), capture=True).decode().splitlines():
             raise RuntimeError(f"Quarantine attribute is not allowed in store payload: {path}")
 
 

@@ -1,6 +1,6 @@
 """Regression checks for release rejection and nested signing order."""
 import importlib.util
-import os
+import subprocess
 import sys
 from pathlib import Path
 import plistlib
@@ -25,16 +25,16 @@ class ReleaseTests(unittest.TestCase):
             source = root / "downloaded.provisionprofile"
             source.write_bytes(b"profile content")
             source.chmod(0o755)
-            os.setxattr(source, "com.apple.quarantine", b"0081;test;Chrome;")
+            subprocess.run(["xattr", "-w", "com.apple.quarantine", "0081;test;Chrome;", str(source)], check=True)
             app = root / "Example.app"
             app.mkdir()
             target = app / "embedded.provisionprofile"
             store.copy_payload(source, target)
             self.assertEqual(target.read_bytes(), source.read_bytes())
             self.assertEqual(target.stat().st_mode & 0o777, 0o755)
-            self.assertIn("com.apple.quarantine", os.listxattr(source))
+            self.assertIn("com.apple.quarantine", subprocess.check_output(["xattr", str(source)]).decode())
             store.check_payload_attributes(app)
-            os.setxattr(target, "com.apple.quarantine", b"0081;test;Chrome;")
+            subprocess.run(["xattr", "-w", "com.apple.quarantine", "0081;test;Chrome;", str(target)], check=True)
             with self.assertRaises(RuntimeError):
                 store.check_payload_attributes(app)
 
