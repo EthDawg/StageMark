@@ -4,7 +4,7 @@ Build targets: Apple Silicon and Intel, macOS 14+. Verification machine: Apple S
 
 ## Preview 1.3 — 9 September 2026
 
-Native regression suite: **34 tests, 232 assertions, zero failures**. Four release-script checks and seven Preview-installer checks also pass. The first native run was correctly rejected because production still held its shortcuts; after using the explicit Quit action, the full suite passed. The sandbox's AppKit initialization failure was not counted as a pass.
+Native regression suite: **35 tests, 253 assertions, zero failures**. Four release-script checks and seven Preview-installer checks also pass. The first native run was correctly rejected because production still held its shortcuts; after using the explicit Quit action, the full suite passed. The sandbox's AppKit initialization failure was not counted as a pass.
 
 New scene coverage includes archive round trips and bounds; path traversal, nonfinite values and duplicate identifiers; preservation of corrupt/future archives; image copies surviving removal of their source; safe duplication; landscape/portrait/ultrawide phone geometry; actual PNG pixels/dimensions; and a recovery journal that recognizes both sides of an interrupted desktop switch. An independent quadrant-image probe verified image orientation. Retina output uses backing dimensions, and editor screen changes update the preview ratio. The image cache is bounded.
 
@@ -12,7 +12,13 @@ Search now reconciles the highlighted customer with the active scene. No match c
 
 Desktop recovery retains unknown or disconnected displays for retry, preserves later manual wallpaper changes, and records recovery before changing the desktop. Physical multi-display/Space behaviour and dynamic wallpaper restoration remain unverified. App Store desktop switching is disabled; adding user-selected file access does not establish Store acceptance of the new features.
 
-The installed Preview is Developer ID signed, version 1.3.0 build 20260908204230, with verified arm64 and x86_64 slices. It is a local test build, not notarised or published. Production bundle, data and preference fingerprints were unchanged across the initial installation. The shared shell, Preview installer and installer tests match Voice byte for byte. Visual acceptance of the installed Preview remains pending: the desktop tool reported a locked Mac and could not open the app. Required interactive checks: image import, name/search, drag/size, high-resolution export, desktop apply/restore, restart, and same-channel suite switching. A successful compile is not visual acceptance.
+The installed Preview is Developer ID signed, version 1.3.0 build 20260908224244, with verified arm64 and x86_64 slices. It is a local test build, not notarised or published. Production bundle, data and preference fingerprints were unchanged across installation and updates. The shared shell, Preview installer and installer tests match Voice byte for byte.
+
+Native UI acceptance on 9 September imported the supplied reception image, renamed the scene, positioned the phone using a preset and direct drag, exported a verified 1920 × 1080 PNG, and retained the saved scene through signed updates and relaunches. Light and dark layouts were inspected; shared appearance was returned to System. Voice's suite switcher opened the installed StageMark Preview. First-launch boards and drawing preferences match production semantically; later board serialization changed key order only.
+
+The real wallpaper test exposed a stale immediate NSWorkspace read after a successful desktop change. Apply and restore now verify asynchronously for up to three seconds, disable repeated actions while pending, and retain recovery on timeout. Added regressions cover delayed confirmation, finite timeout, file URL aliases, manual changes, and consecutive interrupted switches. The final installed app restored the original wallpaper from a journal preserved across an update, then passed a fresh apply/restore cycle. Read-only final verification confirmed the original DefaultDesktop.heic on all three attached displays and no outstanding recovery journal. Only the built-in display's wallpaper was changed during this test; display hot-plug, independent Spaces and other dynamic wallpaper configurations remain unverified.
+
+Long native sessions should use the [unattended helper](unattended.md), which keeps system and display idle assertions scoped to a command without changing the Mac's authentication settings.
 
 ## Automated checks
 
