@@ -56,3 +56,5 @@ The final native regression suite passes: 26 tests, 172 assertions, zero failure
 Visually checked the new native Workbench header, menu switcher, retained drawing controls, and shared dark appearance. The shell explicitly resolves System/Light/Dark in SwiftUI to avoid stale popover appearance. StageMark-to-Voice navigation was exercised. Existing bundle identifier, preferences domain, and board path are retained; the installed saved-board file still contains its display data. No drawing/persistence implementation changed.
 
 Spotlight’s index returns the canonical `/Applications/Workbench StageMark.app` and Workbench Voice installation with their new names, with no old app-bundle duplicates. Both advertise the Utilities category. The prior installed StageMark version is retained as a ZIP under build for rollback.
+
+Follow-up verification with both apps running confirmed Voice-to-StageMark opening and live appearance synchronization in both directions: Dark selected in StageMark appeared in Voice, and System selected in Voice appeared in StageMark. The suite is left on System appearance.
