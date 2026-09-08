@@ -14,4 +14,4 @@ composite as a native test result.
 
 The annotation and timer copies are saved in the [App Store Connect draft](https://appstoreconnect.apple.com/apps/6809807232/distribution/macos/version/inflight).
 The icon is embedded in store build 8, which completed Apple processing.
-This draft is editable and has not been submitted to App Review.
+Version 1.2.1 (8), including these two screenshots, was submitted to App Review on 9 September 2026. Preserve these originals when preparing revised artwork for a subsequent submission.

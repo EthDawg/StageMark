@@ -71,5 +71,13 @@ shortcuts; GitHub Build and test passed. Apple encryption questionnaire answered
 none based on the app having no encryption implementations or network stack.
 
 [Processed build](https://appstoreconnect.apple.com/teams/bcc1ba81-38bf-4899-8e2c-38fff873f001/apps/6809807232/testflight/macos/60de949d-246c-460c-b495-37765f698f2e).
-Final TestFlight installation and sandbox workflow acceptance, artwork accuracy,
-maintainer legal declarations and App Review remain release gates.
+The full test harness was also compiled with `APP_STORE` and run inside a signed
+App Sandbox bundle: 26 tests, 172 assertions, zero failures. A TestFlight receipt
+installation has not yet been exercised. The owner was invited to the internal
+test group; no other testers were added.
+
+Version 1.2.1 (8) was submitted to [App Review](https://appstoreconnect.apple.com/apps/6809807232/distribution/reviewsubmissions/details/91dac330-be7a-4f89-9754-ea59b1ccc221)
+on 9 September 2026. Apple confirmed one item submitted. Pricing is free,
+category Productivity, calculated age rating 4+, with automatic release after
+approval. The maintainer is handling the EU trader declaration. Submission is
+not approval or public App Store availability.
