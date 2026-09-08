@@ -16,6 +16,7 @@ struct TestRunner {
         let integration = IntegrationTests()
         let scenes = SceneTests()
         var tests: [(String, () throws -> Void)] = [
+            ("scene search keeps customer selection consistent", scenes.testSceneSearchSelectsOnlyMatchingCustomers),
             ("desktop recovery across interrupted scene switch", scenes.testDesktopRecoverySurvivesInterruptedSwitch),
             ("scene persistence and bounds", scenes.testSceneRoundTripAndBounds),
             ("scene path and number validation", scenes.testUnsafeImagePathsAndNumbersRejected),

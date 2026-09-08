@@ -3,20 +3,16 @@ import SwiftUI
 
 struct DemoScenesView: View {
     @ObservedObject var model: DemoScenes
-    @State private var search = ""
     @State private var rename = ""
     @State private var confirmingRemoval = false
-    private var filtered: [DemoScene] {
-        model.scenes.filter { search.isEmpty || $0.name.localizedCaseInsensitiveContains(search) }
-    }
     var body: some View {
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 14) {
                 WorkbenchHeader(title: "Demo scenes", subtitle: "A familiar setting. Ready again.", symbol: "iphone.and.landscape")
-                TextField("Find a customer or scene", text: $search).textFieldStyle(.roundedBorder)
+                TextField("Find a customer or scene", text: $model.query).textFieldStyle(.roundedBorder)
                     .accessibilityLabel("Find a scene")
                 List(selection: $model.selectedID) {
-                    ForEach(filtered) { scene in
+                    ForEach(model.matches) { scene in
                         HStack(spacing: 9) {
                             Image(systemName: scene.showsPhone ? "iphone" : "photo").foregroundStyle(Workbench.accent)
                             Text(scene.name).lineLimit(2)
@@ -96,6 +92,12 @@ struct DemoScenesView: View {
                     } else {
                         ContentUnavailableView("Backdrop missing", systemImage: "photo.badge.exclamationmark", description: Text("Add the original image again to create a new scene."))
                     }
+                } else if !model.scenes.isEmpty {
+                    VStack(spacing: 14) {
+                        Image(systemName: "magnifyingglass").font(.system(size: 38)).foregroundStyle(.secondary)
+                        Text("No matching scenes").font(.title2.weight(.semibold))
+                        Button("Clear search") { model.query = "" }
+                    }.frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     VStack(spacing: 14) {
                         Image(systemName: "iphone.and.landscape").font(.system(size: 48)).foregroundStyle(Workbench.accent)

@@ -126,7 +126,8 @@ struct DesktopSnapshot: Codable {
 }
 
 final class DemoScenes: NSObject, ObservableObject, NSWindowDelegate {
-    @Published private(set) var scenes: [DemoScene] = []
+    @Published private(set) var scenes: [DemoScene] = [] { didSet { reconcileSelection() } }
+    @Published var query = "" { didSet { reconcileSelection() } }
     @Published var selectedID: UUID?
     @Published var notice: String?
     @Published private(set) var storageBlocked = false
@@ -135,7 +136,11 @@ final class DemoScenes: NSObject, ObservableObject, NSWindowDelegate {
     let root: URL
     private var window: NSWindow?
     private let imageCache = NSCache<NSString, NSImage>()
-    var selected: DemoScene? { scenes.first { $0.id == selectedID } }
+    var matches: [DemoScene] { scenes.filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) } }
+    var selected: DemoScene? { matches.first { $0.id == selectedID } }
+    private func reconcileSelection() {
+        if !matches.contains(where: { $0.id == selectedID }) { selectedID = matches.first?.id }
+    }
     private var archiveURL: URL { root.appendingPathComponent("scenes.json") }
     private var snapshotURL: URL { root.appendingPathComponent("desktop-restore.json") }
     init(root: URL? = nil) {
@@ -205,18 +210,18 @@ final class DemoScenes: NSObject, ObservableObject, NSWindowDelegate {
         let destination = root.appendingPathComponent(filename)
         try FileManager.default.copyItem(at: url, to: destination)
         let scene = DemoScene(name: String((name ?? url.deletingPathExtension().lastPathComponent).prefix(160)), background: filename)
-        do { try persist(scenes + [scene]); selectedID = scene.id; notice = nil }
+        do { try persist(scenes + [scene]); query = ""; selectedID = scene.id; notice = nil }
         catch { try? FileManager.default.removeItem(at: destination); throw error }
     }
     func duplicate() {
         guard var scene = selected else { return }
         scene.id = UUID(); scene.name = String(scene.name.prefix(150)) + " copy"
-        do { try persist(scenes + [scene]); selectedID = scene.id } catch { notice = error.localizedDescription }
+        do { try persist(scenes + [scene]); query = ""; selectedID = scene.id } catch { notice = error.localizedDescription }
     }
     func remove() {
         guard let id = selectedID else { return }
         do {
-            try persist(scenes.filter { $0.id != id }); selectedID = scenes.first?.id
+            try persist(scenes.filter { $0.id != id })
             // Retain imported images: duplicates and an active wallpaper can refer to them.
         } catch { notice = error.localizedDescription }
     }

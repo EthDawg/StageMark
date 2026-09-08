@@ -1,6 +1,27 @@
 import AppKit
 
 final class SceneTests {
+    func testSceneSearchSelectsOnlyMatchingCustomers() throws {
+        let root = try temporary(); defer { try? FileManager.default.removeItem(at: root) }
+        let first = DemoScene(name: "Customer A reception", background: "a.png")
+        let second = DemoScene(name: "Customer B workshop", background: "b.png")
+        try SceneStorage.save([first, second], to: root.appendingPathComponent("scenes.json"))
+        let model = DemoScenes(root: root)
+        XCTAssertEqual(model.selected?.id, first.id)
+        model.query = "workshop"
+        XCTAssertEqual(model.selectedID, second.id)
+        XCTAssertEqual(model.selected?.id, second.id)
+        model.query = "no such customer"
+        XCTAssertTrue(model.matches.isEmpty)
+        XCTAssertTrue(model.selectedID == nil)
+        XCTAssertTrue(model.selected == nil, "An unmatched previous backdrop must not remain ready to apply")
+        model.query = "reception"
+        model.remove()
+        XCTAssertTrue(model.selected == nil, "Removing the sole match must not select a different customer")
+        XCTAssertEqual(model.scenes.count, 1)
+        model.query = ""
+        XCTAssertEqual(model.selected?.id, second.id)
+    }
     func testDesktopRecoverySurvivesInterruptedSwitch() throws {
         let original = URL(fileURLWithPath: "/original.jpg")
         let first = URL(fileURLWithPath: "/scene-a.png")
