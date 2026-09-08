@@ -4,6 +4,7 @@ import argparse
 import datetime
 import hashlib
 import json
+import os
 import plistlib
 from pathlib import Path
 import shutil
@@ -11,6 +12,17 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 BUNDLE = "local.ethan.StageMark"
+
+
+def copy_payload(source, destination):
+    # Preserve executable permissions, but never inherit downloaded-file xattrs.
+    shutil.copy(source, destination)
+
+
+def check_payload_attributes(app):
+    for path in [app, *app.rglob("*")]:
+        if "com.apple.quarantine" in os.listxattr(path):
+            raise RuntimeError(f"Quarantine attribute is not allowed in store payload: {path}")
 
 
 def run(*args, capture=False):
@@ -56,19 +68,20 @@ def main():
     resources = app / "Contents/Resources"
     resources.mkdir(parents=True)
     (app / "Contents/MacOS").mkdir()
-    shutil.copy2(ROOT / ".build/store-swift/release/StageMark", app / "Contents/MacOS/StageMark")
-    shutil.copy2(ROOT / "Resources/AppIcon.icns", resources / "AppIcon.icns")
-    shutil.copy2(ROOT / "scripts/release/PrivacyInfo.xcprivacy", resources / "PrivacyInfo.xcprivacy")
+    copy_payload(ROOT / ".build/store-swift/release/StageMark", app / "Contents/MacOS/StageMark")
+    copy_payload(ROOT / "Resources/AppIcon.icns", resources / "AppIcon.icns")
+    copy_payload(ROOT / "scripts/release/PrivacyInfo.xcprivacy", resources / "PrivacyInfo.xcprivacy")
     info["CFBundleVersion"] = str(args.build)
     if args.preview:
         # Avoid launching the installed direct edition or sharing its test data.
         info["CFBundleIdentifier"] = BUNDLE + ".StorePreview"
         info["CFBundleDisplayName"] = "StageMark Store Preview"
     else:
-        shutil.copy2(args.profile, app / "Contents/embedded.provisionprofile")
+        copy_payload(args.profile, app / "Contents/embedded.provisionprofile")
     (app / "Contents/Info.plist").write_bytes(plistlib.dumps(info))
     entitlements_path = output / "entitlements.plist"
     entitlements_path.write_bytes(plistlib.dumps(entitlements))
+    check_payload_attributes(app)
     run("codesign", "--force", "--sign", "-" if args.preview else args.app_identity,
         "--entitlements", str(entitlements_path), str(app))
     run("codesign", "--verify", "--deep", "--strict", str(app))
