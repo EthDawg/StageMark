@@ -54,3 +54,22 @@ if functionality or dependencies change.
 References: [Apple signing guidance](https://developer.apple.com/documentation/xcode/creating-distribution-signed-code-for-the-mac/),
 [required API reasons](https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacyaccessedapitypes/nsprivacyaccessedapitype),
 [upload tools](https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds).
+
+## Candidate evidence — 9 September 2026
+
+Version 1.2.1 build 8 (source `5bb85d2`) completed Apple processing after
+Transporter delivery. Build 6 failed error 91109 because the downloaded profile
+carried a quarantine attribute. The packager now copies bytes and permissions
+without downloaded-file metadata, and checks every staged path before signing.
+It leaves the downloaded originals untouched. A regression test covers this case.
+
+Build 8 package SHA-256: `813591d834a316ddcecc9541187918e6fdbb8009393d2d7c80f75dfdbc60b364`.
+
+Validation: four release-script checks; full native test suite, 26 tests and
+172 assertions, zero failures after quitting the installed app to free its
+shortcuts; GitHub Build and test passed. Apple encryption questionnaire answered
+none based on the app having no encryption implementations or network stack.
+
+[Processed build](https://appstoreconnect.apple.com/teams/bcc1ba81-38bf-4899-8e2c-38fff873f001/apps/6809807232/testflight/macos/60de949d-246c-460c-b495-37765f698f2e).
+Final TestFlight installation and sandbox workflow acceptance, artwork accuracy,
+maintainer legal declarations and App Review remain release gates.

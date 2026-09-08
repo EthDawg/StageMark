@@ -9,6 +9,9 @@ Mac screenshot size. The matching *-1440x900.png files are upload copies resized
 maintainer’s explicit approval. The complete image is retained without cropping.
 
 These are promotional composites. Before final App Review, check the visible
-controls and shortcuts against the submitted build. Voice's automatic paste is
-shown in the dictation artwork; that image must be revised if the store edition
-uses manual paste. Do not present a promotional composite as a native test result.
+controls and shortcuts against the submitted build. Do not present a promotional
+composite as a native test result.
+
+The annotation and timer copies are saved in the [App Store Connect draft](https://appstoreconnect.apple.com/apps/6809807232/distribution/macos/version/inflight).
+The icon is embedded in store build 8, which completed Apple processing.
+This draft is editable and has not been submitted to App Review.
