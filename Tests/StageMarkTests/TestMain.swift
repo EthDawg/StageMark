@@ -3,12 +3,18 @@ import AppKit
 @main
 struct TestRunner {
     static func main() {
+        let args = Array(CommandLine.arguments.dropFirst())
+        guard args.isEmpty || args == ["--ci"] else {
+            print("Usage: StageMarkTests [--ci]")
+            exit(2)
+        }
+        let hostedCI = args == ["--ci"]
         _ = NSApplication.shared
         NSApp.setActivationPolicy(.accessory)
         NSApp.finishLaunching()
         let suite = CoreTests()
         let integration = IntegrationTests()
-        let tests: [(String, () throws -> Void)] = [
+        var tests: [(String, () throws -> Void)] = [
             ("line hit testing", suite.testLineHitTestingUsesSegmentsNotBoundingBox),
             ("rectangle edge hit testing", suite.testRectangleOnlyErasesAtBorder),
             ("ellipse edge hit testing", suite.testEllipseOnlyErasesAtBorder),
@@ -33,9 +39,13 @@ struct TestRunner {
             ("native mouse handlers and text commit", integration.testActualMouseHandlersAndTextCommit),
             ("first stroke after activation", integration.testFirstStrokeAfterActivationReachesInactiveCanvas),
             ("native drawing lifecycle and board isolation", integration.testDrawingLifecycleAndBoardIsolation),
-            ("global shortcut registration and release", integration.testShortcutRegistrationAndRelease),
-            ("menu bar and non-destructive quick adjustments", integration.testMenuBarAccessAndQuickAdjustmentsPreserveBoard)
+            ("global shortcut registration and release", integration.testShortcutRegistrationAndRelease)
         ]
+        if hostedCI {
+            print("SKIP live menu-bar popover regression in --ci mode; run scripts/test.zsh on an interactive Mac for full coverage")
+        } else {
+            tests.append(("menu bar and non-destructive quick adjustments", integration.testMenuBarAccessAndQuickAdjustmentsPreserveBoard))
+        }
         for (name, test) in tests {
             let before = assertionFailures
             do { try test() } catch { assertionFailures += 1; print("FAIL \(name): \(error)") }

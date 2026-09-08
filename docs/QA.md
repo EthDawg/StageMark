@@ -58,3 +58,9 @@ Visually checked the new native Workbench header, menu switcher, retained drawin
 Spotlight’s index returns the canonical `/Applications/Workbench StageMark.app` and Workbench Voice installation with their new names, with no old app-bundle duplicates. Both advertise the Utilities category. The prior installed StageMark version is retained as a ZIP under build for rollback.
 
 Follow-up verification with both apps running confirmed Voice-to-StageMark opening and live appearance synchronization in both directions: Dark selected in StageMark appeared in Voice, and System selected in Voice appeared in StageMark. The suite is left on System appearance.
+
+## Community CI — 8 September 2026
+
+GitHub Actions runs `zsh scripts/test.zsh --ci` on an Apple Silicon macOS 26 runner and builds/verifies the app package. The initial hosted run passed 25 tests but failed the live menu-bar popover regression (the popover did not become visible and subsequent state checks failed). The explicit `--ci` mode prints that one test as skipped; it retains native rendering, input, persistence and exclusive-hotkey checks. It does not establish that the popover works on the runner.
+
+The default `zsh scripts/test.zsh` still runs all 26 tests on an interactive Mac, with StageMark quit to avoid shortcut conflicts. A green hosted run must not be described as full interactive UI verification. No application implementation was changed for this CI setup.

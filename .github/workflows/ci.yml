@@ -22,6 +22,6 @@ jobs:
       - name: Check development tools
         run: bash scripts/doctor.sh
       - name: Run regression checks
-        run: zsh scripts/test.zsh
+        run: zsh scripts/test.zsh --ci
       - name: Build and verify app package
         run: zsh scripts/build.zsh

@@ -30,7 +30,7 @@ Quit StageMark before running the tests: they check exclusive global shortcut re
 
 For UI changes, quit StageMark and run `zsh scripts/install.zsh` when ready to test the installed bundle. This **replaces your installed StageMark app** in `/Applications` and archives the previous app for rollback. Installation needs write access to `/Applications`. Preserve your own saved boards. See [test coverage and hardware gaps](docs/QA.md).
 
-CI runs the same tests and package build on a fresh Apple Silicon macOS runner. A maintainer may need to approve the first workflow run from a new fork. CI cannot prove live microphone permissions, cross-app paste, screen sharing, or physical hardware behavior; document relevant manual checks in the PR.
+CI runs `zsh scripts/test.zsh --ci` and the package build on a fresh Apple Silicon macOS runner. This explicitly skips the live menu-bar popover test, which failed to open its popover on the hosted runner; the other native rendering, input, storage and shortcut checks still run. The default local command runs all 26 tests. Run that full suite on an interactive Mac for changes to menu controls. A maintainer may need to approve the first workflow run from a new fork. CI cannot prove live microphone permissions, cross-app paste, screen sharing, or physical hardware behavior; document relevant manual checks in the PR.
 
 ## Find the code
 

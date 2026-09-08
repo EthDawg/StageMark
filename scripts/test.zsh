@@ -9,4 +9,4 @@ STAGEMARK_SOURCES=(Sources/StageMark/*.swift)
 STAGEMARK_SOURCES=("${(@)STAGEMARK_SOURCES:#Sources/StageMark/main.swift}")
 swiftc -swift-version 5 -module-name StageMarkTests -module-cache-path "$CLANG_MODULE_CACHE_PATH" -framework Carbon \
   "${STAGEMARK_SOURCES[@]}" Tests/StageMarkTests/*.swift -o .build/StageMarkTests
-.build/StageMarkTests
+.build/StageMarkTests "$@"
