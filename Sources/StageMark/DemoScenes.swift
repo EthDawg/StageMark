@@ -114,6 +114,26 @@ enum SceneRenderer {
     }
 }
 
+enum DesktopImageVerification {
+    static func matches(_ current: URL?, _ expected: URL) -> Bool {
+        guard let current else { return false }
+        if current == expected { return true }
+        guard current.isFileURL, expected.isFileURL else { return false }
+        return current.standardizedFileURL.resolvingSymlinksInPath() == expected.standardizedFileURL.resolvingSymlinksInPath()
+    }
+
+    // macOS may finish the change after setDesktopImageURL returns. Yield to the
+    // main run loop between reads; a timeout keeps recovery available.
+    static func confirm(_ expected: URL, read: @escaping () -> URL?, attempts: Int = 12,
+                        schedule: @escaping (@escaping () -> Void) -> Void = { next in
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: next)
+                        }, completion: @escaping (Bool) -> Void) {
+        if matches(read(), expected) { completion(true); return }
+        guard attempts > 0 else { completion(false); return }
+        schedule { confirm(expected, read: read, attempts: attempts - 1, schedule: schedule, completion: completion) }
+    }
+}
+
 struct DesktopSnapshot: Codable {
     var screenID: String
     var originalURL: URL
@@ -122,7 +142,18 @@ struct DesktopSnapshot: Codable {
     var scaling: Int?
     var clipping: Bool?
     var fill: [Double]?
-    func owns(_ url: URL?) -> Bool { url == appliedURL || (pendingURL != nil && url == pendingURL) }
+    func owns(_ url: URL?) -> Bool {
+        DesktopImageVerification.matches(url, appliedURL) || pendingURL.map { DesktopImageVerification.matches(url, $0) } == true
+    }
+    func preparingSwitch(to next: URL, current: URL?) -> DesktopSnapshot? {
+        guard let current, owns(current) else { return nil }
+        var snapshot = self
+        // A previous pending picture may already be on screen after an interrupted
+        // finalization. Preserve that observed picture before replacing pendingURL.
+        snapshot.appliedURL = current
+        snapshot.pendingURL = next
+        return snapshot
+    }
 }
 
 final class DemoScenes: NSObject, ObservableObject, NSWindowDelegate {
@@ -132,6 +163,7 @@ final class DemoScenes: NSObject, ObservableObject, NSWindowDelegate {
     @Published var notice: String?
     @Published private(set) var storageBlocked = false
     @Published private(set) var hasDesktopSnapshot = false
+    @Published private(set) var desktopBusy = false
     @Published private(set) var screenAspect: CGFloat = 16.0 / 9.0
     let root: URL
     private var window: NSWindow?
@@ -252,6 +284,8 @@ final class DemoScenes: NSObject, ObservableObject, NSWindowDelegate {
     }
     #if !APP_STORE
     func applyDesktop() {
+        guard !desktopBusy else { return }
+        desktopBusy = true
         do {
             guard let scene = selected, let image = image(for: scene), let screen = targetScreen else { throw SceneError.noScene }
             let workspace = NSWorkspace.shared
@@ -261,10 +295,11 @@ final class DemoScenes: NSObject, ObservableObject, NSWindowDelegate {
             var snapshots: [DesktopSnapshot] = FileManager.default.fileExists(atPath: snapshotURL.path)
                 ? try JSONDecoder().decode([DesktopSnapshot].self, from: Data(contentsOf: snapshotURL)) : []
             let current = workspace.desktopImageURL(for: screen)
-            if let index = snapshots.firstIndex(where: { $0.screenID == screenID }), snapshots[index].owns(current) {
-                // Keep the last applied URL until the new picture has been verified.
-                // Recovery recognizes either side if setting the desktop fails or we exit.
-                snapshots[index].pendingURL = output
+            if let index = snapshots.firstIndex(where: { $0.screenID == screenID }),
+               let prepared = snapshots[index].preparingSwitch(to: output, current: current) {
+                // Recovery recognizes the current and next pictures even after
+                // several interrupted switches in a row.
+                snapshots[index] = prepared
             } else {
                 guard let original = current else { throw SceneError.desktopUnavailable }
                 let options = workspace.desktopImageOptions(for: screen) ?? [:]
@@ -278,41 +313,63 @@ final class DemoScenes: NSObject, ObservableObject, NSWindowDelegate {
             // Save recovery before changing anything outside the app.
             try JSONEncoder().encode(snapshots).write(to: snapshotURL, options: .atomic)
             hasDesktopSnapshot = true
+            notice = "Applying the scene to this display…"
             try workspace.setDesktopImageURL(output, for: screen, options: [.imageScaling: NSImageScaling.scaleAxesIndependently.rawValue])
-            guard workspace.desktopImageURL(for: screen) == output else { throw SceneError.desktopUnavailable }
-            if let index = snapshots.firstIndex(where: { $0.screenID == screenID }) {
-                snapshots[index].appliedURL = output; snapshots[index].pendingURL = nil
-                try JSONEncoder().encode(snapshots).write(to: snapshotURL, options: .atomic)
-            }
-            notice = "\(scene.name) is on this display. Restore desktop brings your previous picture back."
-        } catch { notice = error.localizedDescription }
-    }
-    func restoreDesktop() {
-        do {
-            let snapshots = try JSONDecoder().decode([DesktopSnapshot].self, from: Data(contentsOf: snapshotURL))
-            var remaining: [DesktopSnapshot] = []
-            for snapshot in snapshots {
-                guard let screen = NSScreen.screens.first(where: { AppCoordinator.displayID($0) == snapshot.screenID }) else {
-                    remaining.append(snapshot); continue
-                }
-                // A later manual wallpaper change belongs to the user; never overwrite it.
-                guard let current = NSWorkspace.shared.desktopImageURL(for: screen) else { remaining.append(snapshot); continue }
-                guard snapshot.owns(current) else { continue }
-                var options: [NSWorkspace.DesktopImageOptionKey: Any] = [:]
-                if let value = snapshot.scaling { options[.imageScaling] = value }
-                if let value = snapshot.clipping { options[.allowClipping] = value }
-                if let color = snapshot.fill, color.count == 4 {
-                    options[.fillColor] = NSColor(srgbRed: color[0], green: color[1], blue: color[2], alpha: color[3])
+            DesktopImageVerification.confirm(output, read: { workspace.desktopImageURL(for: screen) }) { [weak self] confirmed in
+                guard let self else { return }
+                defer { self.desktopBusy = false }
+                guard confirmed else {
+                    self.notice = "macOS hasn’t confirmed the desktop change yet. Recovery details are saved; try Restore desktop or export the scene."
+                    return
                 }
                 do {
-                    try NSWorkspace.shared.setDesktopImageURL(snapshot.originalURL, for: screen, options: options)
-                    if NSWorkspace.shared.desktopImageURL(for: screen) != snapshot.originalURL { remaining.append(snapshot) }
-                } catch { remaining.append(snapshot) }
+                    if let index = snapshots.firstIndex(where: { $0.screenID == screenID }) {
+                        snapshots[index].appliedURL = output; snapshots[index].pendingURL = nil
+                        try JSONEncoder().encode(snapshots).write(to: self.snapshotURL, options: .atomic)
+                    }
+                    self.notice = "\(scene.name) is on this display. Restore desktop brings your previous picture back."
+                } catch { self.notice = error.localizedDescription }
             }
+        } catch { desktopBusy = false; notice = error.localizedDescription }
+    }
+    func restoreDesktop() {
+        guard !desktopBusy else { return }
+        desktopBusy = true
+        do {
+            let snapshots = try JSONDecoder().decode([DesktopSnapshot].self, from: Data(contentsOf: snapshotURL))
+            notice = "Restoring the previous desktop…"
+            restoreNext(snapshots, remaining: [])
+        } catch { desktopBusy = false; notice = error.localizedDescription }
+    }
+    private func restoreNext(_ pending: [DesktopSnapshot], remaining: [DesktopSnapshot]) {
+        guard let snapshot = pending.first else { finishRestore(remaining); return }
+        let next = Array(pending.dropFirst())
+        guard let screen = NSScreen.screens.first(where: { AppCoordinator.displayID($0) == snapshot.screenID }),
+              let current = NSWorkspace.shared.desktopImageURL(for: screen) else {
+            restoreNext(next, remaining: remaining + [snapshot]); return
+        }
+        // A later manual wallpaper change belongs to the user; never overwrite it.
+        guard snapshot.owns(current) else { restoreNext(next, remaining: remaining); return }
+        var options: [NSWorkspace.DesktopImageOptionKey: Any] = [:]
+        if let value = snapshot.scaling { options[.imageScaling] = value }
+        if let value = snapshot.clipping { options[.allowClipping] = value }
+        if let color = snapshot.fill, color.count == 4 {
+            options[.fillColor] = NSColor(srgbRed: color[0], green: color[1], blue: color[2], alpha: color[3])
+        }
+        do {
+            try NSWorkspace.shared.setDesktopImageURL(snapshot.originalURL, for: screen, options: options)
+            DesktopImageVerification.confirm(snapshot.originalURL, read: { NSWorkspace.shared.desktopImageURL(for: screen) }) { [weak self] confirmed in
+                self?.restoreNext(next, remaining: confirmed ? remaining : remaining + [snapshot])
+            }
+        } catch { restoreNext(next, remaining: remaining + [snapshot]) }
+    }
+    private func finishRestore(_ remaining: [DesktopSnapshot]) {
+        defer { desktopBusy = false }
+        do {
             if remaining.isEmpty { try FileManager.default.removeItem(at: snapshotURL) }
             else { try JSONEncoder().encode(remaining).write(to: snapshotURL, options: .atomic) }
             hasDesktopSnapshot = !remaining.isEmpty
-            notice = remaining.isEmpty ? "Desktop restored. Any later manual changes were kept." : "Some displays could not be restored. Reconnect them and try again."
+            notice = remaining.isEmpty ? "Desktop restored. Any later manual changes were kept." : "Some displays haven’t confirmed restoration. Recovery details are kept; reconnect any missing displays and try again."
         } catch { notice = error.localizedDescription }
     }
     #endif

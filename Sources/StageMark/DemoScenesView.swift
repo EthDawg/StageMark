@@ -77,7 +77,7 @@ struct DemoScenesView: View {
                         Divider()
                         HStack {
                             #if !APP_STORE
-                            Button("Use as desktop") { model.applyDesktop() }.buttonStyle(.borderedProminent)
+                            Button("Use as desktop") { model.applyDesktop() }.buttonStyle(.borderedProminent).disabled(model.desktopBusy)
                             #endif
                             Button("Export image…") { model.exportPNG() }
                             Spacer()
@@ -119,9 +119,9 @@ struct DemoScenesView: View {
                 #if !APP_STORE
                 if model.hasDesktopSnapshot {
                     HStack {
-                        Text("Your previous desktop is saved.").font(.caption).foregroundStyle(.secondary)
+                        Text(model.desktopBusy ? "Waiting for macOS…" : "Desktop recovery details are saved.").font(.caption).foregroundStyle(.secondary)
                         Spacer()
-                        Button("Restore desktop") { model.restoreDesktop() }
+                        Button("Restore desktop") { model.restoreDesktop() }.disabled(model.desktopBusy)
                     }
                 }
                 #endif

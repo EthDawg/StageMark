@@ -1,6 +1,46 @@
 import AppKit
 
 final class SceneTests {
+    func testDesktopVerificationWaitsForMacOSAndStopsAtTimeout() throws {
+        let original = URL(fileURLWithPath: "/original.jpg")
+        let expected = URL(fileURLWithPath: "/scene.png")
+        let manual = URL(fileURLWithPath: "/user-chosen.jpg")
+        var current: URL? = original
+        var scheduled: [() -> Void] = []
+        var results: [Bool] = []
+        var reads = 0
+        DesktopImageVerification.confirm(expected, read: { reads += 1; return current }, attempts: 3,
+            schedule: { scheduled.append($0) }, completion: { results.append($0) })
+        XCTAssertTrue(results.isEmpty, "A stale immediate read must leave verification pending")
+        XCTAssertEqual(reads, 1)
+        XCTAssertEqual(scheduled.count, 1)
+        scheduled.removeFirst()()
+        XCTAssertTrue(results.isEmpty, "macOS can return the earlier picture more than once")
+        current = expected
+        scheduled.removeFirst()()
+        XCTAssertEqual(results, [true])
+        XCTAssertEqual(reads, 3)
+        XCTAssertTrue(scheduled.isEmpty, "Successful verification must stop polling")
+
+        current = manual; results = []; reads = 0
+        DesktopImageVerification.confirm(expected, read: { reads += 1; return current }, attempts: 2,
+            schedule: { scheduled.append($0) }, completion: { results.append($0) })
+        while !scheduled.isEmpty { scheduled.removeFirst()() }
+        XCTAssertEqual(results, [false], "An unconfirmed or manual picture change must not report success")
+        XCTAssertEqual(reads, 3, "Verification must have a finite retry bound")
+        XCTAssertEqual(current, manual, "Verification must not overwrite a later manual change")
+        XCTAssertFalse(DesktopImageVerification.matches(nil, expected))
+
+        let root = try temporary(); defer { try? FileManager.default.removeItem(at: root) }
+        let image = root.appendingPathComponent("original.heic")
+        let alias = root.appendingPathComponent("alias.heic")
+        try Data("image fixture".utf8).write(to: image)
+        try FileManager.default.createSymbolicLink(at: alias, withDestinationURL: image)
+        XCTAssertTrue(DesktopImageVerification.matches(alias, image), "Equivalent file URLs should confirm without changing the saved original URL")
+        let snapshot = DesktopSnapshot(screenID: "display", originalURL: alias, appliedURL: image)
+        XCTAssertTrue(snapshot.owns(alias))
+        XCTAssertEqual(snapshot.originalURL, alias)
+    }
     func testSceneSearchSelectsOnlyMatchingCustomers() throws {
         let root = try temporary(); defer { try? FileManager.default.removeItem(at: root) }
         let first = DemoScene(name: "Customer A reception", background: "a.png")
@@ -34,6 +74,19 @@ final class SceneTests {
         XCTAssertFalse(recovered.owns(original), "Manual wallpaper changes must not be overwritten")
         XCTAssertFalse(recovered.owns(nil))
         XCTAssertEqual(recovered.originalURL, original)
+
+        // B reached the desktop, but its final journal write was interrupted.
+        // Retrying with C must still recover B if C never reaches the desktop.
+        let third = URL(fileURLWithPath: "/scene-c.png")
+        let retry = recovered.preparingSwitch(to: third, current: second)!
+        let retried = try JSONDecoder().decode(DesktopSnapshot.self, from: JSONEncoder().encode(retry))
+        XCTAssertTrue(retried.owns(second), "A failed retry must retain the picture actually on screen")
+        XCTAssertTrue(retried.owns(third), "An interrupted retry finalization must recognize its new picture")
+        XCTAssertFalse(retried.owns(first), "The obsolete picture must not replace the observed desktop")
+        XCTAssertEqual(retried.originalURL, original)
+        XCTAssertEqual(retried.appliedURL, second)
+        XCTAssertTrue(recovered.preparingSwitch(to: third, current: original) == nil)
+        XCTAssertTrue(recovered.preparingSwitch(to: third, current: nil) == nil)
     }
     private func temporary() throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("StageMarkSceneTests-" + UUID().uuidString)

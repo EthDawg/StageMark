@@ -12,7 +12,7 @@ Welcome! A small, useful improvement is a great first contribution. Bug reports,
 
 ## Build and check
 
-Apple Silicon Mac, macOS 14+, and Apple Command Line Tools (`xcode-select --install`). No third-party packages or full Xcode installation are needed.
+A Mac with macOS 14+ and Apple Command Line Tools (`xcode-select --install`). Apple Silicon and Intel builds are supported; native acceptance has been exercised on Apple Silicon, while physical Intel testing remains open. No third-party packages or full Xcode installation are needed.
 
 Click **Fork** at the top of this repository, then substitute your GitHub username below:
 
@@ -26,11 +26,13 @@ zsh scripts/test.zsh
 zsh scripts/build.zsh
 ```
 
-Quit StageMark before running the tests: they check exclusive global shortcut registration and create temporary native windows. They use disposable preferences and boards. `zsh scripts/build.zsh` produces `build/StageMark.zip` without installing it.
+Quit both StageMark editions before running the tests: they check exclusive global shortcut registration and create temporary native windows. They use disposable preferences, boards and scenes. `zsh scripts/build.zsh` produces `build/StageMark.zip` without installing it.
 
-For UI changes, quit StageMark and run `zsh scripts/install.zsh` when ready to test the installed bundle. This **replaces your installed StageMark app** in `/Applications` and archives the previous app for rollback. Installation needs write access to `/Applications`. Preserve your own saved boards. See [test coverage and hardware gaps](docs/QA.md).
+For UI changes, quit Preview and run `zsh scripts/install.zsh` when ready to test the installed bundle. This uses an available Developer ID certificate to update **Workbench StageMark Preview** in `~/Applications`, keeps a rollback ZIP, and preserves Preview settings, boards and scenes. Production remains installed with its own saved data. Keep the same signing identity and Preview path for subsequent updates. Run one edition at a time when testing their shared shortcuts.
 
-CI runs `zsh scripts/test.zsh --ci` and the package build on a fresh Apple Silicon macOS runner. This explicitly skips the live menu-bar popover test, which failed to open its popover on the hosted runner; the other native rendering, input, storage and shortcut checks still run. The default local command runs all 26 tests. Run that full suite on an interactive Mac for changes to menu controls. A maintainer may need to approve the first workflow run from a new fork. CI cannot prove live microphone permissions, cross-app paste, screen sharing, or physical hardware behavior; document relevant manual checks in the PR.
+Contributors without a Developer ID can build a disposable Preview archive with `zsh scripts/build.zsh --preview --ad-hoc` and open it from a temporary test folder. An ad-hoc build may need fresh macOS permission approval; do not use it to replace an established signed installation. See [release instructions](scripts/release/README.md) and [test coverage and hardware gaps](docs/QA.md).
+
+CI runs `zsh scripts/test.zsh --ci` and the package build on a fresh Apple Silicon macOS runner. This explicitly skips the live menu-bar popover test, which failed to open its popover on the hosted runner; the other native rendering, input, storage and shortcut checks still run. The default local command runs all 35 tests. Run that full suite on an interactive Mac for changes to menu controls. A maintainer may need to approve the first workflow run from a new fork. CI cannot prove live microphone permissions, cross-app paste, screen sharing, or physical hardware behavior; document relevant manual checks in the PR.
 
 ## Find the code
 

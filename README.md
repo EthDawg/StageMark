@@ -38,7 +38,7 @@ We are early: expect rough edges and a small maintainer team. The [open issues](
 
 For a locally built app, follow [the source setup](CONTRIBUTING.md#build-and-check). Official StageMark 1.2.1 early-access downloads are **Developer ID signed and Apple-notarised**. The [Workbench website](https://workbench-mac.vercel.app) links the current signed download and trial guide.
 
-Download `StageMark.zip` from [the signed 1.2.1 release](https://github.com/EthDawg/StageMark/releases/tag/v1.2.1), unzip it, and move **Workbench StageMark.app** into **Applications**. Quit StageMark before replacing an existing version. Keep the installed app in Applications and remove the unpacked download copy to avoid duplicate app-search results. Settings and saved boards live separately and survive app updates. For a source installation or migration from StageMark, run `zsh scripts/install.zsh`; it builds, verifies, installs the new name, and archives the previous installed app for rollback.
+Download `StageMark.zip` from [the signed 1.2.1 release](https://github.com/EthDawg/StageMark/releases/tag/v1.2.1), unzip it, and move **Workbench StageMark.app** into **Applications**. Quit StageMark before replacing an existing version. Keep the installed app in Applications and remove the unpacked download copy to avoid duplicate app-search results. Settings and saved boards live separately and survive app updates. For source development, `zsh scripts/install.zsh` builds and updates the separate **Workbench StageMark Preview** in `~/Applications`, retaining its saved data and a rollback archive. See [release instructions](scripts/release/README.md) for explicit production updates from a notarised archive.
 
 ## Native quick controls
 

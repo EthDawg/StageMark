@@ -16,6 +16,7 @@ struct TestRunner {
         let integration = IntegrationTests()
         let scenes = SceneTests()
         var tests: [(String, () throws -> Void)] = [
+            ("desktop verification waits for macOS and times out safely", scenes.testDesktopVerificationWaitsForMacOSAndStopsAtTimeout),
             ("scene search keeps customer selection consistent", scenes.testSceneSearchSelectsOnlyMatchingCustomers),
             ("desktop recovery across interrupted scene switch", scenes.testDesktopRecoverySurvivesInterruptedSwitch),
             ("scene persistence and bounds", scenes.testSceneRoundTripAndBounds),
