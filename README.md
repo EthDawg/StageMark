@@ -1,10 +1,28 @@
 # Workbench StageMark
 
-A native Mac presentation companion built for Ethan's software demos. Draw over a live application, guide the audience with a cursor highlight, open a saved board, and put a break timer on screen.
+![Workbench — small native Mac tools](docs/assets/workbench.svg)
+
+[![CI](https://github.com/EthDawg/StageMark/actions/workflows/ci.yml/badge.svg)](https://github.com/EthDawg/StageMark/actions/workflows/ci.yml)
+[![MIT license](https://img.shields.io/badge/license-MIT-mintcream.svg)](LICENSE)
+[![Good first issues](https://img.shields.io/github/issues/EthDawg/StageMark/good%20first%20issue)](https://github.com/EthDawg/StageMark/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22good%20first%20issue%22)
+
+**[Start contributing](CONTRIBUTING.md)** · **[Pick a starter issue](https://github.com/EthDawg/StageMark/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22good%20first%20issue%22)** · **[Ask a question](https://github.com/EthDawg/local-voice/discussions)**
+
+A native Mac presentation companion for software demos, teaching, and live presentations. Draw over a live application, guide the audience with a cursor highlight, open a saved board, and put a break timer on screen.
 
 Open **Workbench StageMark** from Applications. It lives in the menu bar. Click its pencil icon or press **Control–Option–S** for the native quick-controls panel. Right-click the icon for an action menu. There is no subscription, account, server, or network dependency.
 
+## Help shape Workbench
+
+Workbench is an open-source collection of small native Mac utilities: **[Voice](https://github.com/EthDawg/local-voice)** for dictation and reading, and **[StageMark](https://github.com/EthDawg/StageMark)** for presenting. Each app works independently. Our focus is useful everyday tools, local processing, clear controls, and recoverable user data.
+
+First contribution? Fix a confusing instruction, test a workflow on your Mac, improve keyboard access, or take a small Swift change. You do not need to be a Swift expert. [The contributor guide](CONTRIBUTING.md) takes you from choosing an issue to opening your first pull request. Documentation can be edited directly on GitHub without a Mac.
+
+We are early: expect rough edges, locally signed releases, and a small maintainer team. The [open issues](https://github.com/EthDawg/StageMark/issues) are the live backlog; `good first issue` marks bounded starting points and `help wanted` marks broader work. [Discuss larger ideas](https://github.com/EthDawg/local-voice/discussions) before investing heavily. We welcome documentation, accessibility, design, bug reports, and testing as well as code.
+
 ## Install
+
+For a locally built app, follow [the source setup](CONTRIBUTING.md#build-and-check). Release binaries are ad-hoc signed and **not Apple-notarized**, so macOS may block a downloaded app.
 
 Download the latest `StageMark.zip` from the repository's Releases page, unzip it, and move **Workbench StageMark.app** into **Applications**. Quit StageMark before replacing an existing version. Keep the installed app in Applications and remove the unpacked download copy to avoid duplicate app-search results. Settings and saved boards live separately and survive app updates. For a source installation or migration from StageMark, run `zsh scripts/install.zsh`; it builds, verifies, installs the new name, and archives the previous installed app for rollback.
 
@@ -61,7 +79,6 @@ Hold **Shift** while drawing shapes for squares, circles and lines at 45-degree 
 ## Files and privacy
 
 - Installed app: `/Applications/Workbench StageMark.app`
-- Project and source: `/Users/ethanharley/Documents/StageMark`
 - Saved boards: `~/Library/Application Support/StageMark/boards.json`
 - Settings: macOS preferences domain `local.ethan.StageMark`
 - Portable app archive: `build/StageMark.zip`
@@ -82,10 +99,12 @@ Quit StageMark before running the tests: the integration suite checks exclusive 
 
 The build creates and verifies an ad-hoc signed app and packages it as `build/StageMark.zip`. Its temporary app bundle is removed automatically so repeated builds do not add another app to macOS search. The icon is generated from original native vector drawing code. On an agent with a restricted filesystem sandbox, macOS icon compilation and the native graphics tests may need the standard execution approval; ordinary Terminal builds do not have that restriction.
 
-This is a local personal-use build. Developer ID signing and Apple notarization for general distribution are not included. Remove the app from Applications to uninstall; your settings and saved boards remain available until you choose to remove them.
+This is an early community project with locally signed builds. Developer ID signing and Apple notarization for general distribution are not included. Remove the app from Applications to uninstall; your settings and saved boards remain available until you choose to remove them.
 
 ## Verification limits
 
 See [QA.md](docs/QA.md) for test coverage. Physical iPad/Apple Pencil, Stream Deck, an external display and a remote screen-share participant were not available for end-to-end checks. Pressure input is implemented using AppKit tablet events; Apple Pencil double-tap switching is not implemented. Native macOS Zoom remains a separate system feature.
 
 The functional reference was [DemoPro](https://www.demoproapp.com/) and its [FAQ](https://www.demoproapp.com/faq.html), inspected on 7 September 2026. StageMark has an original name, interface, icon and implementation; it contains no DemoPro code or assets and is not affiliated with its developer.
+
+The app code and original artwork are [MIT licensed](LICENSE). Apple frameworks and third-party references retain their own terms.
