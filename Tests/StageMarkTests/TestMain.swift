@@ -17,6 +17,7 @@ struct TestRunner {
         let integration = IntegrationTests()
         let scenes = SceneTests()
         let assets = SceneAssetTests()
+        let demo = DemoModeTests()
         var tests: [(String, () throws -> Void)] = [
             ("desktop verification waits for macOS and times out safely", scenes.testDesktopVerificationWaitsForMacOSAndStopsAtTimeout),
             ("scene search keeps customer selection consistent", scenes.testSceneSearchSelectsOnlyMatchingCustomers),
@@ -31,6 +32,12 @@ struct TestRunner {
             ("starter selection preserves saved customers", assets.testStartersNeverOverwriteSavedCustomers),
             ("logo import replacement and missing-file recovery", assets.testLogoImportReplacementAndRecovery),
             ("logo pixels and starter compositions", assets.testLogoPixelsCornersAndSceneCompositions),
+            ("viewport geometry and saved device profiles", demo.testViewportGeometryAndProfiles),
+            ("independent Space recovery and manual changes", demo.testIndependentSpaceRecoveryAndManualChanges),
+            ("capture source identity and stale frames", demo.testCaptureSourceIdentityAndStaleFrames),
+            ("hand transparency persistence and no stretching", demo.testHandTransparencyPersistenceAndNoStretch),
+            ("saved logo adoption reuse and removal", demo.testLogoLibraryMigrationReuseAndRemoval),
+            ("library customization and corrupt file safety", demo.testLibraryCustomizationAndCorruptFileSafety),
             ("line hit testing", suite.testLineHitTestingUsesSegmentsNotBoundingBox),
             ("rectangle edge hit testing", suite.testRectangleOnlyErasesAtBorder),
             ("ellipse edge hit testing", suite.testEllipseOnlyErasesAtBorder),

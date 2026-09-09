@@ -5,7 +5,7 @@ import ImageIO
 /// a durable copy through the same path as a customer's own backdrop.
 struct SceneStarter: Identifiable {
     let id: String
-    let name: String
+    var name: String
     let group: String
     var filename: String { "stagemark-\(id).png" }
     func url(in directory: URL = SceneStarters.directory) -> URL {

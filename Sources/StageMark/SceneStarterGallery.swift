@@ -2,6 +2,10 @@ import SwiftUI
 
 struct SceneStarterGallery: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject var model: DemoScenes
+    @State private var organizing = false
+    @State private var renaming: String?
+    @State private var newName = ""
     let choose: (SceneStarter) -> Void
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -11,23 +15,52 @@ struct SceneStarterGallery: View {
                     Text("Make it yours with a customer logo and a name.").foregroundStyle(.secondary)
                 }
                 Spacer()
+                Button(organizing ? "Done organising" : "Organise") { organizing.toggle() }
                 Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
             }
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    ForEach(["Everyday settings", "Australian sectors"], id: \.self) { group in
-                        Text(group).font(.headline)
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                            ForEach(SceneStarters.all.filter { $0.group == group }) { starter in
+                    if model.starters.isEmpty {
+                        Text("All starter backdrops are hidden. Restore defaults to bring them back.").foregroundStyle(.secondary)
+                    }
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        ForEach(model.starters) { starter in
+                            VStack(spacing: 7) {
                                 SceneStarterCard(starter: starter) { choose(starter) }
+                                if organizing {
+                                    HStack {
+                                        Button { model.customizeStarter { $0.move(starter.id, by: -1) } } label: { Image(systemName: "arrow.up") }
+                                            .disabled(model.starters.first?.id == starter.id).help("Move earlier")
+                                        Button { model.customizeStarter { $0.move(starter.id, by: 1) } } label: { Image(systemName: "arrow.down") }
+                                            .disabled(model.starters.last?.id == starter.id).help("Move later")
+                                        Button("Rename") { renaming = starter.id; newName = starter.name }
+                                        Spacer()
+                                        Button { model.customizeStarter { $0.hidden.insert(starter.id) } } label: { Image(systemName: "eye.slash") }
+                                            .help("Hide starter; saved customer scenes are kept")
+                                    }.font(.caption)
+                                }
                             }
                         }
                     }
                 }
             }
-            Text("Fictional settings made with AI · Available offline").font(.caption).foregroundStyle(.secondary)
+            HStack {
+                Text("Fictional settings made with AI · Available offline").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                if organizing { Button("Restore defaults") { model.customizeStarter { $0 = StarterPreferences() } }.font(.caption) }
+            }
         }.padding(24).frame(width: 680, height: 610)
             .background(Workbench.background).tint(Workbench.accent).workbenchTheme()
+            .alert("Rename starter", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
+                TextField("Name", text: $newName)
+                Button("Save") {
+                    if let id = renaming, !newName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        model.customizeStarter { $0.names[id] = String(newName.prefix(160)) }
+                    }
+                    renaming = nil
+                }
+                Button("Cancel", role: .cancel) { renaming = nil }
+            }
     }
 }
 
