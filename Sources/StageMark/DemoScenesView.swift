@@ -5,6 +5,7 @@ struct DemoScenesView: View {
     @ObservedObject var model: DemoScenes
     @State private var rename = ""
     @State private var confirmingRemoval = false
+    @State private var choosingStarter = false
     var body: some View {
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 14) {
@@ -19,12 +20,15 @@ struct DemoScenesView: View {
                         }.padding(.vertical, 5).tag(scene.id)
                     }
                 }.listStyle(.sidebar)
+                Button { choosingStarter = true } label: { Label("Choose a starter…", systemImage: "square.grid.2x2") }
+                    .disabled(model.storageBlocked)
                 Button { model.importImage() } label: { Label("Add backdrop…", systemImage: "plus") }
                     .buttonStyle(.borderedProminent).disabled(model.storageBlocked)
                 Text("Images and layouts stay on this Mac.")
                     .font(.caption).foregroundStyle(.secondary)
             }.padding(18).frame(width: 245)
             Divider()
+            ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 if let scene = model.selected {
                     HStack {
@@ -40,7 +44,7 @@ struct DemoScenesView: View {
                             .accessibilityLabel("Scene options")
                     }
                     if let image = model.image(for: scene) {
-                        SceneCanvas(scene: scene, image: image) { value in model.update(value) }
+                        SceneCanvas(scene: scene, image: image, logoImage: model.logoImage(for: scene)) { value in model.update(value) }
                             .aspectRatio(model.screenAspect, contentMode: .fit)
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                             .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.primary.opacity(0.12)))
@@ -74,6 +78,7 @@ struct DemoScenesView: View {
                                 model.update(reset)
                             }.buttonStyle(.link)
                         }.font(.caption)
+                        logoControls(scene)
                         Divider()
                         HStack {
                             #if !APP_STORE
@@ -104,7 +109,8 @@ struct DemoScenesView: View {
                         Text("Set the scene for your next demo").font(.title2.weight(.semibold))
                         Text("Add a reception, workplace or customer backdrop.\nMove the phone where it fits. It will be here next time.")
                             .multilineTextAlignment(.center).foregroundStyle(.secondary)
-                        Button("Add backdrop…") { model.importImage() }.buttonStyle(.borderedProminent).disabled(model.storageBlocked)
+                        Button("Choose a starter…") { choosingStarter = true }.buttonStyle(.borderedProminent).disabled(model.storageBlocked)
+                        Button("Add your own backdrop…") { model.importImage() }.disabled(model.storageBlocked)
                     }.frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 Spacer(minLength: 0)
@@ -126,12 +132,53 @@ struct DemoScenesView: View {
                 }
                 #endif
             }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            }
         }
         .background(Workbench.background).tint(Workbench.accent).workbenchTheme()
+        .sheet(isPresented: $choosingStarter) {
+            SceneStarterGallery { starter in
+                do { try model.useStarter(starter); choosingStarter = false }
+                catch { model.notice = error.localizedDescription; choosingStarter = false }
+            }
+        }
         .alert("Remove this scene?", isPresented: $confirmingRemoval) {
             Button("Cancel", role: .cancel) {}
             Button("Remove", role: .destructive) { model.remove() }
         } message: { Text("The saved layout will be removed. The imported picture stays on this Mac.") }
+    }
+    @ViewBuilder private func logoControls(_ scene: DemoScene) -> some View {
+        if scene.logo != nil {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Label("Customer logo", systemImage: "photo.badge.checkmark").font(.caption)
+                    Spacer()
+                    Button("Replace…") { model.importLogo() }
+                    Button("Remove") { var value = scene; value.logo = nil; model.update(value) }
+                }
+                HStack(spacing: 16) {
+                    Picker("Corner", selection: logoBinding(\.corner, fallback: .topRight)) {
+                        ForEach(LogoCorner.allCases, id: \.self) { Text($0.label).tag($0) }
+                    }.fixedSize()
+                    Picker("Backing", selection: logoBinding(\.backing, fallback: .light)) {
+                        ForEach(LogoBacking.allCases, id: \.self) { Text($0.label).tag($0) }
+                    }.fixedSize()
+                    Text("Size").foregroundStyle(.secondary)
+                    Slider(value: logoBinding(\.width, fallback: 0.16), in: 0.08...0.28)
+                        .accessibilityLabel("Logo size")
+                }.font(.caption)
+                if model.logoImage(for: scene) == nil {
+                    Text("Logo missing — replace or remove it to export this scene.").font(.caption).foregroundStyle(.orange)
+                }
+            }
+        } else {
+            Button { model.importLogo() } label: { Label("Add customer logo…", systemImage: "photo.badge.plus") }
+        }
+    }
+    private func logoBinding<T>(_ key: WritableKeyPath<SceneLogo, T>, fallback: T) -> Binding<T> {
+        Binding(get: { model.selected?.logo?[keyPath: key] ?? fallback }, set: { value in
+            guard var scene = model.selected, var logo = scene.logo else { return }
+            logo[keyPath: key] = value; scene.logo = logo; model.update(scene)
+        })
     }
     private func binding<T>(_ key: WritableKeyPath<DemoScene, T>) -> Binding<T> {
         let fallback = model.selected![keyPath: key]
@@ -153,16 +200,18 @@ struct DemoScenesView: View {
 private struct SceneCanvas: NSViewRepresentable {
     let scene: DemoScene
     let image: NSImage
+    let logoImage: NSImage?
     let update: (DemoScene) -> Void
     func makeNSView(context: Context) -> SceneCanvasView { SceneCanvasView() }
     func updateNSView(_ view: SceneCanvasView, context: Context) {
-        view.scene = scene; view.image = image; view.update = update; view.needsDisplay = true
+        view.scene = scene; view.image = image; view.logoImage = logoImage; view.update = update; view.needsDisplay = true
     }
 }
 
 private final class SceneCanvasView: NSView {
     var scene: DemoScene?
     var image: NSImage?
+    var logoImage: NSImage?
     var update: ((DemoScene) -> Void)?
     private var origin = CGPoint.zero
     private var initial: DemoScene?
@@ -170,7 +219,7 @@ private final class SceneCanvasView: NSView {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     override func draw(_ dirtyRect: NSRect) {
         guard let scene, let image else { return }
-        SceneRenderer.draw(scene, image: image, size: bounds.size)
+        SceneRenderer.draw(scene, image: image, size: bounds.size, logoImage: logoImage)
     }
     override func mouseDown(with event: NSEvent) {
         origin = convert(event.locationInWindow, from: nil); initial = scene

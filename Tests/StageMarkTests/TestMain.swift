@@ -4,17 +4,19 @@ import AppKit
 struct TestRunner {
     static func main() {
         let args = Array(CommandLine.arguments.dropFirst())
-        guard args.isEmpty || args == ["--ci"] else {
-            print("Usage: StageMarkTests [--ci]")
+        guard args.isEmpty || args == ["--ci"] || args == ["--scenes-only"] else {
+            print("Usage: StageMarkTests [--ci | --scenes-only]")
             exit(2)
         }
+        let scenesOnly = args == ["--scenes-only"]
         let hostedCI = args == ["--ci"]
         _ = NSApplication.shared
         NSApp.setActivationPolicy(.accessory)
-        NSApp.finishLaunching()
+        if !scenesOnly { NSApp.finishLaunching() }
         let suite = CoreTests()
         let integration = IntegrationTests()
         let scenes = SceneTests()
+        let assets = SceneAssetTests()
         var tests: [(String, () throws -> Void)] = [
             ("desktop verification waits for macOS and times out safely", scenes.testDesktopVerificationWaitsForMacOSAndStopsAtTimeout),
             ("scene search keeps customer selection consistent", scenes.testSceneSearchSelectsOnlyMatchingCustomers),
@@ -25,6 +27,10 @@ struct TestRunner {
             ("scene duplicate ID validation", scenes.testDuplicateIDsRejected),
             ("phone geometry across display shapes", scenes.testPhoneStaysWithinWideAndTallDisplays),
             ("scene rendering and durable image import", scenes.testRenderAndImportedImageSurviveSourceRemoval),
+            ("legacy scene decoding and logo validation", assets.testLegacyScenesAndLogoValidation),
+            ("starter selection preserves saved customers", assets.testStartersNeverOverwriteSavedCustomers),
+            ("logo import replacement and missing-file recovery", assets.testLogoImportReplacementAndRecovery),
+            ("logo pixels and starter compositions", assets.testLogoPixelsCornersAndSceneCompositions),
             ("line hit testing", suite.testLineHitTestingUsesSegmentsNotBoundingBox),
             ("rectangle edge hit testing", suite.testRectangleOnlyErasesAtBorder),
             ("ellipse edge hit testing", suite.testEllipseOnlyErasesAtBorder),
@@ -51,7 +57,9 @@ struct TestRunner {
             ("native drawing lifecycle and board isolation", integration.testDrawingLifecycleAndBoardIsolation),
             ("global shortcut registration and release", integration.testShortcutRegistrationAndRelease)
         ]
-        if hostedCI {
+        if scenesOnly {
+            tests = Array(tests.prefix { $0.0 != "line hit testing" })
+        } else if hostedCI {
             print("SKIP live menu-bar popover regression in --ci mode; run scripts/test.zsh on an interactive Mac for full coverage")
         } else {
             tests.append(("menu bar and non-destructive quick adjustments", integration.testMenuBarAccessAndQuickAdjustmentsPreserveBoard))

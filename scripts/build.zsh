@@ -2,6 +2,7 @@
 set -euo pipefail
 STAGEMARK_ROOT="${0:A:h:h}"
 cd "$STAGEMARK_ROOT"
+python3 scripts/check-scene-assets.py
 if [ "${1:-}" = "--preview" ]; then
     shift
     exec python3 scripts/release/preview.py build "$@"
@@ -39,6 +40,7 @@ if [[ ! -f Resources/AppIcon.icns ]]; then
   iconutil -c icns build/AppIcon.iconset -o Resources/AppIcon.icns
 fi
 cp Resources/AppIcon.icns "$STAGEMARK_APP/Contents/Resources/AppIcon.icns"
+cp -R Resources/SceneBackdrops "$STAGEMARK_APP/Contents/Resources/SceneBackdrops"
 codesign --force --sign - --identifier local.ethan.StageMark "$STAGEMARK_APP"
 codesign --verify --deep --strict "$STAGEMARK_APP"
 ditto -c -k --sequesterRsrc --keepParent "$STAGEMARK_APP" "$STAGEMARK_PACKAGE_DIR/StageMark.zip"

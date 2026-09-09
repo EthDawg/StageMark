@@ -14,6 +14,7 @@ struct DemoScene: Codable, Identifiable, Equatable {
     var phoneX = 0.5
     var phoneY = 0.5
     var phoneHeight = 0.88
+    var logo: SceneLogo? = nil
 
     func validated() throws -> DemoScene {
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -23,6 +24,7 @@ struct DemoScene: Codable, Identifiable, Equatable {
               [backgroundX, backgroundY, zoom, phoneX, phoneY, phoneHeight].allSatisfy(\.isFinite)
         else { throw SceneError.invalidScene }
         var value = self
+        value.logo = try logo?.validated()
         value.backgroundX = min(1, max(0, backgroundX)); value.backgroundY = min(1, max(0, backgroundY))
         value.zoom = min(3, max(1, zoom)); value.phoneHeight = min(0.96, max(0.3, phoneHeight))
         value.phoneX = min(1, max(0, phoneX)); value.phoneY = min(1, max(0, phoneY))
@@ -31,9 +33,10 @@ struct DemoScene: Codable, Identifiable, Equatable {
 }
 
 enum SceneError: LocalizedError {
-    case invalidScene, futureVersion, invalidImage, storageBlocked, noScene, desktopUnavailable
+    case invalidScene, futureVersion, invalidImage, storageBlocked, noScene, desktopUnavailable, missingLogo
     var errorDescription: String? {
         switch self {
+        case .missingLogo: return "The customer logo is missing. Replace or remove it before exporting or applying this scene."
         case .invalidScene: return "This scene contains invalid settings. The original has been kept."
         case .futureVersion: return "These scenes need a newer StageMark. The original has been kept."
         case .invalidImage: return "Choose a PNG, JPEG or HEIC image under 40 MB and 50 megapixels."
@@ -73,7 +76,18 @@ enum SceneRenderer {
         return CGRect(x: (size.width - width) * scene.phoneX,
                       y: (size.height - height) * scene.phoneY, width: width, height: height)
     }
-    static func draw(_ scene: DemoScene, image: NSImage, size: CGSize) {
+    static func logoRect(_ logo: SceneLogo, imageSize: CGSize, in size: CGSize) -> CGRect {
+        let margin = min(size.width, size.height) * 0.035
+        let maxWidth = size.width * logo.width
+        let maxHeight = size.height * 0.16
+        let scale = min(maxWidth / max(1, imageSize.width), maxHeight / max(1, imageSize.height))
+        let width = imageSize.width * scale, height = imageSize.height * scale
+        let left = logo.corner == .topLeft || logo.corner == .bottomLeft
+        let top = logo.corner == .topLeft || logo.corner == .topRight
+        return CGRect(x: left ? margin : size.width - margin - width,
+                      y: top ? size.height - margin - height : margin, width: width, height: height)
+    }
+    static func draw(_ scene: DemoScene, image: NSImage, size: CGSize, logoImage: NSImage? = nil) {
         let bounds = CGRect(origin: .zero, size: size)
         NSGraphicsContext.saveGraphicsState()
         NSBezierPath(rect: bounds).addClip()
@@ -99,15 +113,24 @@ enum SceneRenderer {
                                 width: frame.width * 0.25, height: frame.height * 0.018)
             NSColor.black.setFill(); NSBezierPath(roundedRect: island, xRadius: island.height / 2, yRadius: island.height / 2).fill()
         }
+        if let logo = scene.logo, let logoImage {
+            let rect = logoRect(logo, imageSize: logoImage.size, in: size)
+            if logo.backing != .none {
+                let pad = min(size.width, size.height) * 0.012
+                (logo.backing == .light ? NSColor.white : NSColor.black).withAlphaComponent(0.9).setFill()
+                NSBezierPath(roundedRect: rect.insetBy(dx: -pad, dy: -pad), xRadius: pad * 0.6, yRadius: pad * 0.6).fill()
+            }
+            logoImage.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1)
+        }
         NSGraphicsContext.restoreGraphicsState()
     }
-    static func png(_ scene: DemoScene, image: NSImage, size: CGSize) throws -> Data {
+    static func png(_ scene: DemoScene, image: NSImage, size: CGSize, logoImage: NSImage? = nil) throws -> Data {
         guard size.width >= 1, size.height >= 1, size.width <= 8192, size.height <= 8192,
               let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width), pixelsHigh: Int(size.height),
                     bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0),
               let context = NSGraphicsContext(bitmapImageRep: bitmap) else { throw SceneError.invalidImage }
         NSGraphicsContext.saveGraphicsState(); NSGraphicsContext.current = context
-        draw(scene, image: image, size: size)
+        draw(scene, image: image, size: size, logoImage: logoImage)
         NSGraphicsContext.restoreGraphicsState()
         guard let data = bitmap.representation(using: .png, properties: [:]) else { throw SceneError.invalidImage }
         return data
@@ -185,11 +208,11 @@ final class DemoScenes: NSObject, ObservableObject, NSWindowDelegate {
     }
     func show() {
         if window == nil {
-            let created = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 1000, height: 660),
+            let created = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 1060, height: 780),
                                    styleMask: [.titled, .closable, .resizable, .miniaturizable], backing: .buffered, defer: false)
             created.title = "\(Workbench.displayName) · Demo scenes"
             created.delegate = self
-            created.minSize = CGSize(width: 850, height: 600); created.isReleasedWhenClosed = false
+            created.minSize = CGSize(width: 850, height: 680); created.isReleasedWhenClosed = false
             created.contentView = NSHostingView(rootView: DemoScenesView(model: self))
             created.center(); window = created; refreshScreen()
         }
@@ -225,6 +248,13 @@ final class DemoScenes: NSObject, ObservableObject, NSWindowDelegate {
         }
     }
     func addImage(_ url: URL, name: String? = nil) throws {
+        let filename = try copyImage(url)
+        let destination = root.appendingPathComponent(filename)
+        let scene = DemoScene(name: String((name ?? url.deletingPathExtension().lastPathComponent).prefix(160)), background: filename)
+        do { try persist(scenes + [scene]); query = ""; selectedID = scene.id; notice = nil }
+        catch { try? FileManager.default.removeItem(at: destination); throw error }
+    }
+    private func copyImage(_ url: URL) throws -> String {
         guard !storageBlocked else { throw SceneError.storageBlocked }
         let access = url.startAccessingSecurityScopedResource(); defer { if access { url.stopAccessingSecurityScopedResource() } }
         let count = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? Int.max
@@ -241,9 +271,41 @@ final class DemoScenes: NSObject, ObservableObject, NSWindowDelegate {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let destination = root.appendingPathComponent(filename)
         try FileManager.default.copyItem(at: url, to: destination)
-        let scene = DemoScene(name: String((name ?? url.deletingPathExtension().lastPathComponent).prefix(160)), background: filename)
-        do { try persist(scenes + [scene]); query = ""; selectedID = scene.id; notice = nil }
-        catch { try? FileManager.default.removeItem(at: destination); throw error }
+        return filename
+    }
+    func useStarter(_ starter: SceneStarter, directory: URL = SceneStarters.directory) throws {
+        try addImage(starter.url(in: directory), name: starter.name)
+    }
+    func logoImage(for scene: DemoScene) -> NSImage? {
+        guard let logo = scene.logo, (try? logo.validated()) != nil else { return nil }
+        if let cached = imageCache.object(forKey: logo.image as NSString) { return cached }
+        guard let image = NSImage(contentsOf: root.appendingPathComponent(logo.image)) else { return nil }
+        imageCache.setObject(image, forKey: logo.image as NSString,
+                             cost: Int(min(200_000_000, image.size.width * image.size.height * 4)))
+        return image
+    }
+    func importLogo() {
+        guard let sceneID = selected?.id else { return }
+        let panel = NSOpenPanel(); panel.allowedContentTypes = [.png, .jpeg, .heic]; panel.canChooseDirectories = false
+        panel.message = "Choose a customer logo. Transparent PNGs work best. A copy stays with this scene."
+        panel.begin { [weak self] result in
+            guard result == .OK, let url = panel.url else { return }
+            do { try self?.addLogo(url, to: sceneID) } catch { self?.notice = error.localizedDescription }
+        }
+    }
+    func addLogo(_ url: URL, to sceneID: UUID) throws {
+        guard var scene = scenes.first(where: { $0.id == sceneID }) else { throw SceneError.noScene }
+        let filename = try copyImage(url)
+        var logo = scene.logo ?? SceneLogo(image: filename)
+        logo.image = filename; scene.logo = logo
+        do { try persist(scenes.map { $0.id == sceneID ? scene : $0 }); notice = nil }
+        catch { try? FileManager.default.removeItem(at: root.appendingPathComponent(filename)); throw error }
+    }
+    /// Missing branding must never silently disappear from a customer export.
+    func renderPNG(_ scene: DemoScene, image: NSImage, size: CGSize) throws -> Data {
+        let logoImage = logoImage(for: scene)
+        if scene.logo != nil && logoImage == nil { throw SceneError.missingLogo }
+        return try SceneRenderer.png(scene, image: image, size: size, logoImage: logoImage)
     }
     func duplicate() {
         guard var scene = selected else { return }
@@ -277,8 +339,9 @@ final class DemoScenes: NSObject, ObservableObject, NSWindowDelegate {
         panel.begin { [weak self] result in
             guard result == .OK, let url = panel.url else { return }
             do {
-                try SceneRenderer.png(scene, image: image, size: size).write(to: url, options: .atomic)
-                self?.notice = "Saved \(url.lastPathComponent)."
+                guard let self else { return }
+                try self.renderPNG(scene, image: image, size: size).write(to: url, options: .atomic)
+                self.notice = "Saved \(url.lastPathComponent)."
             } catch { self?.notice = error.localizedDescription }
         }
     }
@@ -291,7 +354,7 @@ final class DemoScenes: NSObject, ObservableObject, NSWindowDelegate {
             let workspace = NSWorkspace.shared
             let screenID = AppCoordinator.displayID(screen)
             let output = root.appendingPathComponent("desktop-\(UUID().uuidString).png")
-            try SceneRenderer.png(scene, image: image, size: outputSize).write(to: output, options: .atomic)
+            try renderPNG(scene, image: image, size: outputSize).write(to: output, options: .atomic)
             var snapshots: [DesktopSnapshot] = FileManager.default.fileExists(atPath: snapshotURL.path)
                 ? try JSONDecoder().decode([DesktopSnapshot].self, from: Data(contentsOf: snapshotURL)) : []
             let current = workspace.desktopImageURL(for: screen)

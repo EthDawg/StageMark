@@ -70,6 +70,10 @@ def main():
     (app / "Contents/MacOS").mkdir()
     copy_payload(ROOT / ".build/store-swift/release/StageMark", app / "Contents/MacOS/StageMark")
     copy_payload(ROOT / "Resources/AppIcon.icns", resources / "AppIcon.icns")
+    (resources / "SceneBackdrops").mkdir()
+    for scene_asset in (ROOT / "Resources/SceneBackdrops").iterdir():
+        if scene_asset.is_file():
+            copy_payload(scene_asset, resources / "SceneBackdrops" / scene_asset.name)
     copy_payload(ROOT / "scripts/release/PrivacyInfo.xcprivacy", resources / "PrivacyInfo.xcprivacy")
     info["CFBundleVersion"] = str(args.build)
     if args.preview:

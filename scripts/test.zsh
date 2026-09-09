@@ -2,6 +2,7 @@
 set -euo pipefail
 STAGEMARK_ROOT="${0:A:h:h}"
 cd "$STAGEMARK_ROOT"
+python3 scripts/check-scene-assets.py
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/release/test_release.py
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/release/test_preview.py
 mkdir -p .build/module-cache .build/cache
