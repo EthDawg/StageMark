@@ -108,6 +108,8 @@ final class DemoCapture: NSObject, ObservableObject, AVCaptureVideoDataOutputSam
         }
     }
     func stop() {
+        // Replace the former live label during the short full-screen exit.
+        publish("Ending demo…")
         queue.async { [self] in
             enabled = false; _ = recovery.select(nil); stopSession()
             timer?.cancel(); timer = nil

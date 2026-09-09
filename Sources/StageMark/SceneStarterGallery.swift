@@ -31,12 +31,15 @@ struct SceneStarterGallery: View {
                                     HStack {
                                         Button { model.customizeStarter { $0.move(starter.id, by: -1) } } label: { Image(systemName: "arrow.up") }
                                             .disabled(model.starters.first?.id == starter.id).help("Move earlier")
+                                            .accessibilityLabel("Move \(starter.name) earlier")
                                         Button { model.customizeStarter { $0.move(starter.id, by: 1) } } label: { Image(systemName: "arrow.down") }
                                             .disabled(model.starters.last?.id == starter.id).help("Move later")
+                                            .accessibilityLabel("Move \(starter.name) later")
                                         Button("Rename") { renaming = starter.id; newName = starter.name }
                                         Spacer()
                                         Button { model.customizeStarter { $0.hidden.insert(starter.id) } } label: { Image(systemName: "eye.slash") }
                                             .help("Hide starter; saved customer scenes are kept")
+                                            .accessibilityLabel("Hide \(starter.name)")
                                     }.font(.caption)
                                 }
                             }

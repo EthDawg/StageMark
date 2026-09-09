@@ -29,6 +29,7 @@ final class DemoPresentation: NSObject, NSWindowDelegate {
         window.tabbingMode = .disallowed
         window.isReleasedWhenClosed = false; window.delegate = self
         window.onEscape = { [weak self] in self?.end() }
+        window.onReconnect = { [weak self] in self?.capture.reconnect() }
         window.contentView = NSHostingView(rootView: DemoStageContent(scene: scene, backdrop: backdrop, logo: logo, hand: hand, capture: capture) { [weak self] in self?.end() })
         self.window = window
         NSApp.activate(ignoringOtherApps: true); window.makeKeyAndOrderFront(nil)
@@ -63,7 +64,15 @@ final class DemoPresentation: NSObject, NSWindowDelegate {
 
 private final class DemoStageWindow: NSWindow {
     var onEscape: (() -> Void)?
+    var onReconnect: (() -> Void)?
     override func cancelOperation(_ sender: Any?) { onEscape?() }
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+           event.charactersIgnoringModifiers?.lowercased() == "r" {
+            onReconnect?(); return true
+        }
+        return super.performKeyEquivalent(with: event)
+    }
     override func keyDown(with event: NSEvent) {
         if event.keyCode == 53 { onEscape?() } else { super.keyDown(with: event) }
     }
@@ -80,6 +89,7 @@ private struct DemoStageContent: View {
     @State private var fitToSource = true
     @State private var hideControls: DispatchWorkItem?
     @State private var choosingSource = false
+    @State private var hoveringControls = false
     private var liveScene: DemoScene {
         var value = scene
         if fitToSource, capture.dimensions.height > 0 {
@@ -109,11 +119,12 @@ private struct DemoStageContent: View {
                     HStack(spacing: 14) {
                         if scene.showsPhone {
                             Button("Source…") { choosingSource = true }
-                            Button("Reconnect") { capture.reconnect(); showControls() }
+                            Button("Reconnect") { capture.reconnect(); showControls() }.help("Reconnect device · ⌘R")
                             Toggle("Fit to screen", isOn: $fitToSource).toggleStyle(.checkbox)
                         }
                         Button("End demo · Esc", action: end).keyboardShortcut(.cancelAction)
                     }.padding(12).background(.ultraThickMaterial, in: RoundedRectangle(cornerRadius: 12)).padding(18)
+                        .onHover { hoveringControls = $0; showControls() }
                 }
             }.background(.black)
                 .onContinuousHover { phase in if case .active = phase { showControls() } }
@@ -139,6 +150,7 @@ private struct DemoStageContent: View {
     }
     private func showControls() {
         controlsVisible = true; hideControls?.cancel()
+        guard !hoveringControls, !choosingSource else { return }
         let work = DispatchWorkItem { controlsVisible = false }
         hideControls = work; DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: work)
     }

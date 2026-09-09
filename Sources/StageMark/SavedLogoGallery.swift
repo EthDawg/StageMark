@@ -23,7 +23,7 @@ struct SavedLogoGallery: View {
                             Button("Rename") { renaming = logo.id; name = logo.name }
                             Button("Remove from saved logos") { model.removeSavedLogo(logo.id) }
                         } label: { Image(systemName: "ellipsis") }.menuStyle(.borderlessButton).fixedSize()
-                    }.padding(.vertical, 5)
+                    }.padding(.vertical, 5).accessibilityElement(children: .contain)
                 }
             }
             Text("Removing a saved logo keeps every customer scene that already uses it.").font(.caption).foregroundStyle(.secondary)

@@ -1,8 +1,8 @@
 # Demo mode: Preview 1.4
 
-Development handoff, 9 September 2026. Native interaction testing is deliberately
-pending the user's next hands-off window. Do not interpret compilation or model
-tests as acceptance of USB capture, full-screen transitions or macOS permissions.
+Installed Preview and native QA handoff, 9 September 2026. The user authorised
+foreground testing after development. The connected iPhone path now has native
+evidence; the remaining hardware and wallpaper edge cases are listed below.
 
 ## Product flow
 
@@ -20,7 +20,8 @@ tests as acceptance of USB capture, full-screen transitions or macOS permissions
    the stage and returns to the editor. The stage never changes wallpaper.
 
 The pointer reveals a small Source / Reconnect / Fit to screen / End toolbar.
-Controls fade after three seconds. Only video is connected; there is no recording
+Controls fade after three seconds away from the toolbar; hovering keeps them
+visible. Command-R reconnects even while controls are hidden. Only video is connected; there is no recording
 output, audio connection, upload or remote control. A stalled feed is hidden
 after five seconds without new frames, with recovery controls shown. A locked
 device may still emit valid black frames, so there is no claim to detect every
@@ -89,45 +90,66 @@ its sandbox path is accepted on hardware. Scene editing/export compile with
 USB mirroring, AirPlay and device control are not implemented. Intel compilation
 is verified; physical Intel hardware remains untested.
 
-## Verification and next acceptance session
-
-Background checks on the final source:
+## Verified build and native acceptance
 
 - `zsh scripts/test.zsh --scenes-only`: 19 tests, 504 assertions, zero failures;
-  plus 11 release/updater tests. Temporary test fixtures only; no live camera,
-  desktop change, global hotkey registration or application installation.
+  plus 11 release/updater tests. The background suite uses isolated fixtures.
 - `swift build --scratch-path .build/scene-store-check --disable-sandbox -Xswiftc -DAPP_STORE`:
-  successful conditional Store compilation.
-- `zsh scripts/build.zsh --preview`: universal arm64/x86_64 Preview ZIP, signed
-  with the existing Developer ID. The final extracted artifact passed strict
-  signature verification with normal macOS signing access, exact Preview identity,
-  camera entitlement, both architecture slices, and eight original PNG hashes.
-  This handoff does not install or launch it.
+  successful conditional Store compilation after the native QA fixes.
+- Final Preview **1.4.0 build 20260909121035** is installed in
+  `~/Applications/Workbench StageMark Preview.app`. Its executable matches the
+  signed `build/Workbench StageMark Preview.zip` exactly. The extracted package
+  passed strict signature verification with normal macOS signing access,
+  Preview identity, camera entitlement, arm64/x86_64 and all eight PNG hashes.
+- ZIP: 21,866,963 bytes; SHA-256
+  `0db444b404295e3140198db701488504c9f9c40ac80c831e82d4ce95b1a78187`.
 
-Final package: **1.4.0 build 20260909070304**, `build/Workbench StageMark Preview.zip`
-(21,859,421 bytes). SHA-256:
-`b9b2c37a9c1171da220d8c50b03f6e6d9cf19443e17aba4544d50b156199f555`.
-Installed Preview remains 1.3.0 build 20260909041039; production remains 1.2.0
-build 4. No app-data migration was run against the user's live installation.
+Native checks passed on this Mac:
 
-The next user-authorized UI session should verify:
+1. The connected iPhone appeared directly in the full-screen stage, with readable,
+   non-mirrored video, one device border, matching corners and no synthetic island.
+   A text logo displayed independently above the scene.
+2. Repeated Start/Escape returned to the editor. Source selection showed the
+   remembered iPhone. Both the Reconnect button and Command-R rebuilt the feed
+   and returned to live video.
+3. `pmset -g assertions` showed StageMark's idle display/system assertions during
+   the stage and none after Escape. No wallpaper apply/restore operation was run
+   in this native session; the existing recovery journal stayed unchanged.
+4. Previously imported logos were adopted, reused and retained after app updates.
+   A temporary native text logo was created, exported and removed from the library
+   while its temporary scene kept the image.
+5. The native export panel produced a 2940 × 1912 PNG in the local QA directory.
+6. Starter rename, reorder and hide were verified by UI and saved-file readback.
+   Restore defaults returned the original eight choices. Customer-scene reorder
+   and removal also worked. Tablet and landscape frame presets rendered correctly.
+7. The production copy was quit, without uninstalling or replacing it. After
+   restarting Preview, the conflict notice disappeared and Control-Option-P opened
+   the scene editor. Preview was left open and foreground control handed back.
 
-1. Updating the same Preview preserves customers, logos and device preferences;
-   production remains separate. Primary actions stay visible at minimum size.
-2. Gallery rename/reorder/hide/reset and customer scene reorder/remove; saved-logo
-   adoption, reuse, rename, removal, text logos, all four corners and PNG export.
-3. Start/End, Escape, window close and full-screen failure/exit return correctly;
-   the existing desktop picture stays unchanged and idle-sleep assertions release.
-4. Camera allow/deny paths; no unintended microphone prompt. An already connected
-   iPhone is selected correctly. Test an iPad, rotation, source aspect, corner
-   clipping, readable non-mirrored video, and branding above the live layer.
-5. Repeated cable disconnect/replug, explicit Reconnect, phone lock/unlock, wake,
-   another app already using the device, multiple devices and source switching.
-   Never substitute another person's feed while waiting for the remembered device.
-6. Apply separate phone/tablet wallpapers in two Spaces on the same monitor,
-   relaunch, restore each from its Space, and preserve a later manual wallpaper.
-7. After the user provides cutouts: true transparency, placement, flip, tones,
-   non-stretching device changes and identical branding/hand ordering in export.
+All four original customer IDs and their order remain. Saved boards and the
+legacy wallpaper recovery journal are semantically unchanged. Temporary QA scene
+and logo entries are removed; starter preferences are back at defaults. The latest
+BaptistCare frame placement from the shared-control interval was retained. A full
+pre-session Preview-data snapshot and the earlier 1.3 ZIP remain locally under
+`.build/native-demo-qa-20260909/`. No production binary or data was edited.
 
-Do not promote this candidate to production or describe native capture as
-verified until the connected-device acceptance session passes.
+Detailed local evidence: `.build/native-demo-qa-20260909/native-qa-result.json`.
+The native menu automation occasionally timed out; a one-second process sample
+showed normal AppKit menu event tracking, not an app deadlock. Escape dismissed
+that menu and testing continued. Live phone screenshots were not committed.
+
+## Remaining checks
+
+- Physical cable unplug/replug, device lock/unlock and wake recovery. Programmatic
+  reconnect and model identity/stale-frame cases passed; they are not substitutes
+  for these hardware scenarios.
+- Actual iPad capture/rotation, competing video apps and multiple source devices.
+- Permission-denied flow and an explicit audit for unintended microphone prompts.
+- Apply phone/tablet wallpapers in two Spaces on one monitor, relaunch and restore
+  each from its own Space; preserve a later manual wallpaper. Model recovery tests
+  passed, but this exact native multi-Space sequence is still pending.
+- The user's future hand cutouts, physical Intel hardware and App Store sandbox
+  capture acceptance.
+
+Keep this in Preview while those edge cases are assessed. There is no automatic
+production promotion, public release, notarisation submission or Store upload.
