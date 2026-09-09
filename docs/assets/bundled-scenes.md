@@ -24,3 +24,11 @@ A new optional `logo` object preserves decoding of existing version-1 scene arch
 ## Upgrade
 
 Build a signed archive with `zsh scripts/build.zsh --preview`. Install the completed archive using the normal Preview installer after the running Preview has quit. Keep the same app location, bundle identifier and Developer ID signing identity. The production app and its permissions are untouched. A rollback ZIP is retained by the installer; older binaries cannot display the new logo controls.
+
+## Installed Preview acceptance — 9 September 2026
+
+Installed Preview 1.3.0 build 20260909041039 at the existing user Applications path using the existing Developer ID team. Verified both arm64 and x86_64 slices, all eight installed PNG hashes, and unchanged production StageMark/Voice executable hashes. The previous Preview is retained in the installer's rollback ZIP.
+
+Native UI verification covered all eight gallery thumbnails, selection of Financial services, logo import through the file picker, bottom-left placement, size adjustment and dark backing. The installed app rendered the logo in its 2940 × 1912 desktop PNG, applied it successfully, reported verified restoration and removed its recovery journal. A separate macOS readback matched the exact original wallpaper URL on the one connected display. Multi-display hardware was not available in this session.
+
+The temporary Financial services scene was removed; the complete saved scene archive matched its pre-upgrade contents, including BaptistCare's phone position. Preview was left open at the starter gallery. Production remained running and therefore continued owning its existing shortcuts. No global shortcut or annotation regression suite was run while sharing the live desktop; the 13 scene tests / 262 assertions and 11 release/installer checks had passed before installation.
